@@ -1,98 +1,181 @@
 package ptumall.service.impl;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ptumall.dao.CartDao;
 import ptumall.dao.GoodsDao;
-import ptumall.dao.OrderDao;
 import ptumall.model.Cart;
 import ptumall.model.Goods;
-import ptumall.model.Userorder;
 import ptumall.service.CartService;
 
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 @Service
 public class CartServiceImpl implements CartService {
-    @Autowired(required = false)
-    CartDao cartDao;
-    @Autowired(required = false)
-    GoodsDao goodsDao;
-    @Autowired(required = false)
-    OrderDao orderDao;
-    @Override
-    public Cart insertCart(Cart cart) {
-        Cart cartJdbc = cartDao.getCartByUGid(cart.getUid(),cart.getGoodid());
-        Goods goods = goodsDao.getGoodById(cart.getGoodid());
-        if(cartJdbc!=null)
-        {
-            int number = cart.getNumber() + cartJdbc.getNumber();
-            int price = number * goods.getGprice();
-            cartDao.updateCart(number,price,cartJdbc.getId());
-            cart.setNumber(number);
-            cart.setPrice(price);
-            cart.setId(cartJdbc.getId());
-        }
-        else
-        {
-            int price = cart.getNumber() * goods.getGprice();
-            cart.setPrice(price);
-            cartDao.insertCart(cart);
-        }
-        return cart;
-    }
 
+    @Autowired
+    private CartDao cartDao;
+    
+    @Autowired
+    private GoodsDao goodsDao;
+    
     @Override
-    public PageInfo<Cart> getAllCart(Integer uid, Integer pageNum, Integer pageSize) {
-        //开启分页
-        PageHelper.startPage(pageNum,pageSize);
-        List<Cart> cartList = cartDao.getAllCart(uid);
-        PageInfo<Cart> pageInfo = new PageInfo<>(cartList);
-        return pageInfo;
-    }
-
-    @Override
-    public Cart modifyNumber(Integer uid, Integer gid, Integer type) {
-        Cart cartJdbc = cartDao.getCartByUGid(uid,gid);
-        Goods goods = goodsDao.getGoodById(gid);
-        if(cartJdbc!=null)
-        {
-            int number = cartJdbc.getNumber() + 1 * (type);
-            cartJdbc.setNumber(number);
-            int price = number * goods.getGprice();
-            cartJdbc.setPrice(price);
-            cartDao.updateCart(number,price,cartJdbc.getId());
-            return cartJdbc;
+    public List<Cart> getCartList(Integer userId) {
+        if (userId == null) {
+            return null;
         }
-        return null;
-    }
-
-    @Override
-    public int deleteOne(Integer id) {
-        return cartDao.deleteOne(id);
-    }
-
-    @Override
-    public int deleteAll(Integer uid) {
-        return cartDao.deleteAll(uid);
-    }
-
-    @Override
-    public int payCart(Integer uid) {
-        List<Cart> cartList = cartDao.getAllCart(uid);
-        if(cartList.size()==0)
-        {
-            return 0;
+        
+        List<Cart> cartList = cartDao.findByUserId(userId);
+        
+        // 计算每个购物车项的总价
+        if (cartList != null && !cartList.isEmpty()) {
+            for (Cart cart : cartList) {
+                if (cart.getGoodsPrice() != null && cart.getQuantity() != null) {
+                    // 总价 = 单价 × 数量
+                    BigDecimal totalPrice = cart.getGoodsPrice().multiply(new BigDecimal(cart.getQuantity()));
+                    cart.setTotalPrice(totalPrice);
+                }
+            }
         }
-        //插入订单列表
-        for(Cart cart : cartList)
-        {
-            Userorder userorder = new Userorder(cart.getNumber(),cart.getPrice(),cart.getGoodsname(),cart.getUid());
-            orderDao.InsertOrder(userorder);
+        
+        return cartList;
+    }
+    
+    @Override
+    @Transactional
+    public boolean addToCart(Integer userId, Integer goodsId, Integer quantity) {
+        if (userId == null || goodsId == null || quantity == null || quantity <= 0) {
+            return false;
         }
-        //删除购物车
-        return cartDao.deleteAll(uid);
+        
+        // 检查商品是否存在且上架
+        Goods goods = goodsDao.findById(goodsId);
+        if (goods == null || goods.getStatus() == null || goods.getStatus() != 1) {
+            return false;
+        }
+        
+        // 检查库存是否足够
+        if (goods.getStock() < quantity) {
+            return false;
+        }
+        
+        // 检查购物车中是否已存在该商品
+        Cart existingCart = cartDao.findByUserIdAndGoodsId(userId, goodsId);
+        
+        if (existingCart != null) {
+            // 已存在，更新数量
+            int newQuantity = existingCart.getQuantity() + quantity;
+            
+            // 再次检查库存是否足够
+            if (goods.getStock() < newQuantity) {
+                return false;
+            }
+            
+            existingCart.setQuantity(newQuantity);
+            existingCart.setUpdateTime(new Date());
+            return cartDao.update(existingCart) > 0;
+        } else {
+            // 不存在，新增购物车项
+            Cart cart = new Cart();
+            cart.setUserId(userId);
+            cart.setGoodsId(goodsId);
+            cart.setQuantity(quantity);
+            Date now = new Date();
+            cart.setCreateTime(now);
+            cart.setUpdateTime(now);
+            return cartDao.insert(cart) > 0;
+        }
+    }
+    
+    @Override
+    @Transactional
+    public boolean updateQuantity(Integer userId, Integer cartId, Integer quantity) {
+        if (userId == null || cartId == null || quantity == null) {
+            return false;
+        }
+        
+        if (quantity <= 0) {
+            // 数量小于等于0，删除购物车项
+            return deleteCartItem(userId, cartId);
+        }
+        
+        // 先查询购物车项，确保是当前用户的
+        List<Cart> carts = cartDao.findByUserId(userId);
+        Cart targetCart = null;
+        
+        for (Cart cart : carts) {
+            if (cart.getId().equals(cartId)) {
+                targetCart = cart;
+                break;
+            }
+        }
+        
+        if (targetCart == null) {
+            return false;
+        }
+        
+        // 检查商品是否还存在且上架
+        Goods goods = goodsDao.findById(targetCart.getGoodsId());
+        if (goods == null || goods.getStatus() == null || goods.getStatus() != 1) {
+            return false;
+        }
+        
+        // 检查库存是否足够
+        if (goods.getStock() < quantity) {
+            return false;
+        }
+        
+        // 更新数量
+        targetCart.setQuantity(quantity);
+        targetCart.setUpdateTime(new Date());
+        return cartDao.update(targetCart) > 0;
+    }
+    
+    @Override
+    @Transactional
+    public boolean deleteCartItem(Integer userId, Integer cartId) {
+        if (userId == null || cartId == null) {
+            return false;
+        }
+        
+        // 先查询购物车项，确保是当前用户的
+        List<Cart> carts = cartDao.findByUserId(userId);
+        boolean isUserCart = false;
+        
+        for (Cart cart : carts) {
+            if (cart.getId().equals(cartId)) {
+                isUserCart = true;
+                break;
+            }
+        }
+        
+        if (!isUserCart) {
+            return false;
+        }
+        
+        return cartDao.deleteById(cartId) > 0;
+    }
+    
+    @Override
+    @Transactional
+    public boolean deleteCartItemByGoodsId(Integer userId, Integer goodsId) {
+        if (userId == null || goodsId == null) {
+            return false;
+        }
+        
+        return cartDao.deleteByUserIdAndGoodsId(userId, goodsId) > 0;
+    }
+    
+    @Override
+    @Transactional
+    public boolean clearCart(Integer userId) {
+        if (userId == null) {
+            return false;
+        }
+        
+        return cartDao.clearByUserId(userId) >= 0; // 即使没有购物车项，也认为是成功的
     }
 }

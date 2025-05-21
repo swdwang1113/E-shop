@@ -32,7 +32,7 @@ public class JWTUtils {
         JWTUtils.expireTime = expireTime;
     }
 
-    public static String getToken(String userId, String userName) {
+    public static String getToken(Integer userId, String userName) {
 
         Calendar instance = Calendar.getInstance();
         // 单位分钟
@@ -43,8 +43,8 @@ public class JWTUtils {
 
         // payload
         Map<String, String> payload = new HashMap<>();
-        payload.put("id",userId);
-        payload.put("name",userName);
+        payload.put("userId", userId.toString());
+        payload.put("name", userName);
         payload.forEach((k, v) -> {
             builder.withClaim(k, v);
         });
