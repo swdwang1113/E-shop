@@ -12,9 +12,11 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new JWTInterceptors()).
                 addPathPatterns("/**")//所有接口进行拦截
-                .excludePathPatterns("/user/login","/user/register")//登录、注册放行
+                .excludePathPatterns("/user/login","/user/register","/user/check-username")//登录、注册、检查用户名放行
+                .excludePathPatterns("/goods/list","/goods/*","/goods/recommend")//商品查询接口放行
+                .excludePathPatterns("/category/list","/category/*")//商品分类查询接口放行
                 .excludePathPatterns("/img/**")//放行图片
-        .excludePathPatterns("/swagger-resources/**","/swagger-ui/**", "/v3/**", "/error");//放行swagger
+                .excludePathPatterns("/swagger-resources/**","/swagger-ui/**", "/v3/**", "/error");//放行swagger
 
     }
     @Value("${file.save-path}")

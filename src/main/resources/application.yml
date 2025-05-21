@@ -20,10 +20,25 @@ pagehelper:
   reasonable: true
   support-methods-arguments: true
   params: count=countSql
+  
+# 文件存储配置
 file:
+  # 存储类型：local(本地存储), oss(阿里云OSS)
+  storage-type: local
   save-path: "D:/code/SHOP/shop-server/servershop/src/main/resources/static/img/"
+  
+# 图片URL前缀配置  
 image:
   prefix-url: "http://127.0.0.1:8080"
+
+# 阿里云OSS配置（未来使用）
+aliyun:
+  oss:
+    endpoint: # 例如 oss-cn-hangzhou.aliyuncs.com
+    accessKeyId: # 你的accessKeyId
+    accessKeySecret: # 你的accessKeySecret
+    bucketName: # 你的bucketName
+    urlPrefix: # 例如 https://your-bucket.oss-cn-hangzhou.aliyuncs.com
 
 swagger:
   enabled: true

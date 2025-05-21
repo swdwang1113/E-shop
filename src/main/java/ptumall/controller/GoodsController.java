@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ptumall.config.JWTInterceptors;
 import ptumall.model.Goods;
+import ptumall.service.FileService;
 import ptumall.service.GoodsService;
 import ptumall.utils.AuthUtils;
 import ptumall.vo.Result;
@@ -31,6 +32,9 @@ public class GoodsController {
     
     @Autowired
     private AuthUtils authUtils;
+    
+    @Autowired
+    private FileService fileService;
     
     @Value("${file.save-path}")
     private String saveFilePath;
@@ -176,26 +180,11 @@ public class GoodsController {
             return Result.failure(ResultCode.PARAMS_IS_INVALID, "上传文件不能为空");
         }
         
-        // 获取文件名
-        String fileName = file.getOriginalFilename();
-        // 获取文件后缀
-        String suffixName = fileName.substring(fileName.lastIndexOf("."));
-        // 生成新文件名
-        String newFileName = UUID.randomUUID().toString() + suffixName;
-        // 创建目标文件
-        File dest = new File(saveFilePath + newFileName);
-        // 检测目录是否存在
-        if (!dest.getParentFile().exists()) {
-            dest.getParentFile().mkdirs();
-        }
-        
-        try {
-            file.transferTo(dest);
-            // 返回图片访问路径
-            String imageUrlPath = imageUrl + "/img/" + newFileName;
+        // 使用FileService上传图片
+        String imageUrlPath = fileService.uploadImage(file, "goods");
+        if (imageUrlPath != null) {
             return Result.success(imageUrlPath);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } else {
             return Result.failure(ResultCode.FAILED, "图片上传失败");
         }
     }
