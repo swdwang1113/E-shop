@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import ptumall.model.Orders;
 import ptumall.model.OrderItems;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Mapper
@@ -100,4 +101,16 @@ public interface OrderDao {
      * @return 影响行数
      */
     int deleteById(Integer id);
+    
+    /**
+     * 获取订单总数
+     * @return 订单总数
+     */
+    int count();
+    
+    /**
+     * 获取销售总额
+     * @return 销售总额
+     */
+    BigDecimal sumTotalAmount();
 }

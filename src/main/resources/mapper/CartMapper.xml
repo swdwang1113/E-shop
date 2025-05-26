@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ptumall.dao.CartDao">
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="ptumall.model.Cart">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="goodsId" column="goods_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    
+    <!-- 带商品信息的结果映射 -->
+    <resultMap id="CartWithGoodsMap" type="ptumall.model.Cart" extends="BaseResultMap">
+        <result property="goodsName" column="goods_name"/>
+        <result property="goodsPrice" column="goods_price"/>
+        <result property="goodsImage" column="goods_image"/>
+        <result property="totalPrice" column="total_price"/>
+    </resultMap>
+    
+    <!-- 根据用户ID查询购物车列表 -->
+    <select id="findByUserId" parameterType="java.lang.Integer" resultMap="CartWithGoodsMap">
+        SELECT c.*, g.name as goods_name, g.price as goods_price, g.image_url as goods_image,
+               (g.price * c.quantity) as total_price
+        FROM cart c
+        LEFT JOIN goods g ON c.goods_id = g.id
+        WHERE c.user_id = #{userId}
+        ORDER BY c.create_time DESC
+    </select>
+    
+    <!-- 根据用户ID和商品ID查询购物车项 -->
+    <select id="findByUserIdAndGoodsId" resultMap="BaseResultMap">
+        SELECT * FROM cart
+        WHERE user_id = #{userId} AND goods_id = #{goodsId}
+    </select>
+    
+    <!-- 添加购物车项 -->
+    <insert id="insert" parameterType="ptumall.model.Cart" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO cart (user_id, goods_id, quantity, create_time, update_time)
+        VALUES (#{userId}, #{goodsId}, #{quantity}, #{createTime}, #{updateTime})
+    </insert>
+    
+    <!-- 更新购物车项 -->
+    <update id="update" parameterType="ptumall.model.Cart">
+        UPDATE cart
+        <set>
+            <if test="quantity != null">quantity = #{quantity},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 删除购物车项 -->
+    <delete id="deleteById" parameterType="java.lang.Integer">
+        DELETE FROM cart WHERE id = #{id}
+    </delete>
+    
+    <!-- 根据用户ID和商品ID删除购物车项 -->
+    <delete id="deleteByUserIdAndGoodsId">
+        DELETE FROM cart WHERE user_id = #{userId} AND goods_id = #{goodsId}
+    </delete>
+    
+    <!-- 清空用户购物车 -->
+    <delete id="clearByUserId">
+        DELETE FROM cart WHERE user_id = #{userId}
+    </delete>
+    
+    <!-- 根据ID列表查询购物车 -->
+    <select id="selectByIds" resultMap="CartWithGoodsMap">
+        SELECT 
+            c.id, c.user_id, c.goods_id, c.quantity, c.create_time, c.update_time,
+            g.name as goods_name, g.price as goods_price, g.image_url as goods_image,
+            (g.price * c.quantity) as total_price
+        FROM 
+            cart c
+            LEFT JOIN goods g ON c.goods_id = g.id
+        WHERE 
+            c.id IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+    </select>
+    
+    <!-- 根据ID列表删除购物车商品 -->
+    <delete id="deleteByIds">
+        DELETE FROM cart 
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper> 

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ptumall.dao.GoodsReviewDao">
+    
+    <resultMap id="BaseResultMap" type="ptumall.model.GoodsReview">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="goods_id" property="goodsId"/>
+        <result column="order_id" property="orderId"/>
+        <result column="rating" property="rating"/>
+        <result column="content" property="content"/>
+        <result column="images" property="images"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="create_time" property="createTime"/>
+        <result column="username" property="username"/>
+        <result column="goods_name" property="goodsName"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        r.id, r.user_id, r.goods_id, r.order_id, r.rating, r.content, r.images, r.like_count, r.create_time
+    </sql>
+    
+    <insert id="insert" parameterType="ptumall.model.GoodsReview" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO goods_review (user_id, goods_id, order_id, rating, content, images)
+        VALUES (#{userId}, #{goodsId}, #{orderId}, #{rating}, #{content}, #{images})
+    </insert>
+    
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.username, g.name as goods_name
+        FROM goods_review r
+        LEFT JOIN user u ON r.user_id = u.id
+        LEFT JOIN goods g ON r.goods_id = g.id
+        WHERE r.id = #{id}
+    </select>
+    
+    <select id="findByGoodsId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.username, g.name as goods_name
+        FROM goods_review r
+        LEFT JOIN user u ON r.user_id = u.id
+        LEFT JOIN goods g ON r.goods_id = g.id
+        WHERE r.goods_id = #{goodsId}
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.username, g.name as goods_name
+        FROM goods_review r
+        LEFT JOIN user u ON r.user_id = u.id
+        LEFT JOIN goods g ON r.goods_id = g.id
+        WHERE r.user_id = #{userId}
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <select id="findByOrderId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.username, g.name as goods_name
+        FROM goods_review r
+        LEFT JOIN user u ON r.user_id = u.id
+        LEFT JOIN goods g ON r.goods_id = g.id
+        WHERE r.order_id = #{orderId}
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <select id="findByUserIdAndGoodsIdAndOrderId" resultMap="BaseResultMap">
+        SELECT r.id, r.user_id, r.goods_id, r.order_id, r.rating, r.content, r.images, r.like_count, r.create_time
+        FROM goods_review r
+        WHERE r.user_id = #{userId} AND r.goods_id = #{goodsId} AND r.order_id = #{orderId}
+    </select>
+    
+    <update id="updateLikeCount">
+        UPDATE goods_review r
+        SET r.like_count = #{likeCount}
+        WHERE r.id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM goods_review r
+        WHERE r.id = #{id}
+    </delete>
+    
+    <select id="getAverageRatingByGoodsId" resultType="java.lang.Double">
+        SELECT AVG(r.rating)
+        FROM goods_review r
+        WHERE r.goods_id = #{goodsId}
+    </select>
+    
+    <select id="countByGoodsId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM goods_review r
+        WHERE r.goods_id = #{goodsId}
+    </select>
+    
+</mapper> 

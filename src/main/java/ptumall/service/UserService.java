@@ -54,4 +54,10 @@ public interface UserService {
      * @return 删除成功返回true，失败返回false
      */
     boolean deleteUser(Integer id);
+    
+    /**
+     * 获取用户总数
+     * @return 用户总数
+     */
+    int getUserCount();
 }

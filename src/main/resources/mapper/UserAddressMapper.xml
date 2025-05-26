@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ptumall.dao.UserAddressDao">
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="ptumall.model.UserAddress">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="receiver_name" property="name"/>
+        <result column="receiver_phone" property="phone"/>
+        <result column="province" property="province"/>
+        <result column="city" property="city"/>
+        <result column="district" property="district"/>
+        <result column="detail_address" property="address"/>
+        <result column="is_default" property="isDefault"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 插入收货地址 -->
+    <insert id="insert" parameterType="ptumall.model.UserAddress" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_address (
+            user_id, receiver_name, receiver_phone, province, city, district, detail_address, 
+            is_default, create_time, update_time
+        ) VALUES (
+            #{userId}, #{name}, #{phone}, #{province}, #{city}, #{district}, #{address}, 
+            #{isDefault}, NOW(), NOW()
+        )
+    </insert>
+    
+    <!-- 根据ID查询收货地址 -->
+    <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT * FROM user_address WHERE id = #{id}
+    </select>
+    
+    <!-- 查询用户的收货地址列表 -->
+    <select id="selectByUserId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT * FROM user_address WHERE user_id = #{userId} ORDER BY is_default DESC, create_time DESC
+    </select>
+    
+    <!-- 更新收货地址 -->
+    <update id="update" parameterType="ptumall.model.UserAddress">
+        UPDATE user_address
+        <set>
+            <if test="name != null">receiver_name = #{name},</if>
+            <if test="phone != null">receiver_phone = #{phone},</if>
+            <if test="province != null">province = #{province},</if>
+            <if test="city != null">city = #{city},</if>
+            <if test="district != null">district = #{district},</if>
+            <if test="address != null">detail_address = #{address},</if>
+            <if test="isDefault != null">is_default = #{isDefault},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 删除收货地址 -->
+    <delete id="delete">
+        DELETE FROM user_address WHERE id = #{id} AND user_id = #{userId}
+    </delete>
+    
+    <!-- 将用户所有地址设为非默认 -->
+    <update id="resetDefault">
+        UPDATE user_address SET is_default = 0, update_time = NOW() WHERE user_id = #{userId}
+    </update>
+    
+    <!-- 将指定地址设为默认 -->
+    <update id="markDefault">
+        UPDATE user_address SET is_default = 1, update_time = NOW() WHERE id = #{id} AND user_id = #{userId}
+    </update>
+</mapper> 

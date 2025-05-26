@@ -23,6 +23,15 @@ public class User {
     @ApiModelProperty(value = "用户角色", notes = "0-普通用户，1-管理员", example = "0")
     private Byte role;
     
+    @ApiModelProperty(value = "电话号码", required = false, example = "13800138000")
+    private String phone;
+    
+    @ApiModelProperty(value = "邮箱", required = false, example = "user@example.com")
+    private String email;
+    
+    @ApiModelProperty(value = "头像URL", required = false, example = "/uploads/avatars/default.jpg")
+    private String avatar;
+    
     @ApiModelProperty(value = "创建时间", hidden = true)
     private Date createTime;
     

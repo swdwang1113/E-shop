@@ -1,11 +1,15 @@
 package ptumall.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ptumall.dao.GoodsDao;
 import ptumall.model.Goods;
+import ptumall.service.GoodsCategoryService;
 import ptumall.service.GoodsService;
+import ptumall.vo.PageResult;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -17,6 +21,9 @@ public class GoodsServiceImpl implements GoodsService {
     @Autowired
     private GoodsDao goodsDao;
     
+    @Autowired
+    private GoodsCategoryService categoryService;
+    
     @Override
     public Goods getGoodsById(Integer id) {
         return goodsDao.findById(id);
@@ -24,7 +31,44 @@ public class GoodsServiceImpl implements GoodsService {
     
     @Override
     public List<Goods> getGoodsList(Integer categoryId, String keyword, String sortBy, String sortDirection) {
-        return goodsDao.findList(categoryId, keyword, sortBy, sortDirection);
+        // 如果有分类ID，获取该分类及其所有子分类的ID列表
+        List<Integer> categoryIds = null;
+        if (categoryId != null) {
+            categoryIds = categoryService.getCategoryAndChildrenIds(categoryId);
+        }
+        
+        return goodsDao.findList(categoryIds, keyword, sortBy, sortDirection);
+    }
+    
+    @Override
+    public PageResult<Goods> getGoodsListPage(Integer pageNum, Integer pageSize, Integer categoryId, String keyword, String sortBy, String sortDirection) {
+        // 如果有分类ID，获取该分类及其所有子分类的ID列表
+        List<Integer> categoryIds = null;
+        if (categoryId != null) {
+            categoryIds = categoryService.getCategoryAndChildrenIds(categoryId);
+        }
+        
+        // 设置默认值
+        if (pageNum == null || pageNum < 1) {
+            pageNum = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 使用PageHelper进行分页查询
+        PageHelper.startPage(pageNum, pageSize);
+        List<Goods> goodsList = goodsDao.findList(categoryIds, keyword, sortBy, sortDirection);
+        PageInfo<Goods> pageInfo = new PageInfo<>(goodsList);
+        
+        // 构建分页结果
+        return new PageResult<>(
+            pageInfo.getTotal(), 
+            pageInfo.getPages(), 
+            pageInfo.getPageNum(), 
+            pageInfo.getPageSize(), 
+            goodsList
+        );
     }
     
     @Override
@@ -123,5 +167,10 @@ public class GoodsServiceImpl implements GoodsService {
         
         int rows = goodsDao.updateSalesVolume(id, increment);
         return rows > 0;
+    }
+    
+    @Override
+    public int getGoodsCount() {
+        return goodsDao.count();
     }
 }

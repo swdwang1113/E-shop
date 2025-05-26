@@ -127,4 +127,9 @@ public class UserServiceImpl implements UserService {
         int rows = userDao.deleteById(id);
         return rows > 0;
     }
+    
+    @Override
+    public int getUserCount() {
+        return userDao.count();
+    }
 }

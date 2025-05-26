@@ -15,6 +15,7 @@ import ptumall.service.OrderService;
 import ptumall.vo.CreateOrderParam;
 import ptumall.vo.PageResult;
 import ptumall.vo.ResultCode;
+import ptumall.vo.OrderStatisticsVO;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -79,6 +80,16 @@ public class OrderServiceImpl implements OrderService {
                     throw new BusinessException(ResultCode.PARAM_ERROR, "商品不存在");
                 }
                 
+                // 验证商品是否上架
+                if (goods.getStatus() == null || goods.getStatus() != 1) {
+                    throw new BusinessException(ResultCode.PARAM_ERROR, "商品已下架");
+                }
+                
+                // 验证库存是否足够
+                if (goods.getStock() < cart.getQuantity()) {
+                    throw new BusinessException(ResultCode.PARAM_ERROR, "商品[" + goods.getName() + "]库存不足");
+                }
+                
                 // 创建订单项
                 OrderItems orderItem = new OrderItems();
                 orderItem.setGoodsId(goods.getId());
@@ -105,6 +116,15 @@ public class OrderServiceImpl implements OrderService {
             }
             orderDao.batchInsertOrderItems(orderItems);
             
+            // 扣减库存
+            for (Cart cart : cartList) {
+                Goods goods = goodsDao.selectById(cart.getGoodsId());
+                goodsDao.updateStock(goods.getId(), goods.getStock() - cart.getQuantity());
+                
+                // 更新销量
+                goodsDao.updateSalesVolume(goods.getId(), cart.getQuantity());
+            }
+            
             // 清空购物车
             cartDao.deleteByIds(param.getCartItemIds());
         } 
@@ -114,6 +134,16 @@ public class OrderServiceImpl implements OrderService {
             Goods goods = goodsDao.selectById(param.getGoodsId());
             if (goods == null) {
                 throw new BusinessException(ResultCode.PARAM_ERROR, "商品不存在");
+            }
+            
+            // 验证商品是否上架
+            if (goods.getStatus() == null || goods.getStatus() != 1) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "商品已下架");
+            }
+            
+            // 验证库存是否足够
+            if (goods.getStock() < param.getQuantity()) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "商品[" + goods.getName() + "]库存不足");
             }
             
             // 创建订单项
@@ -136,6 +166,12 @@ public class OrderServiceImpl implements OrderService {
             // 保存订单商品
             orderItem.setOrderId(order.getId());
             orderDao.insertOrderItem(orderItem);
+            
+            // 扣减库存
+            goodsDao.updateStock(goods.getId(), goods.getStock() - param.getQuantity());
+            
+            // 更新销量
+            goodsDao.updateSalesVolume(goods.getId(), param.getQuantity());
         } else {
             throw new BusinessException(ResultCode.PARAM_ERROR, "参数错误");
         }
@@ -258,9 +294,27 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "订单不存在");
         }
         
-        // 只有未支付的订单可以取消
+        // 只有待付款的订单可以取消
         if (order.getStatus() != 0) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "当前订单状态不可取消");
+        }
+        
+        // 获取订单商品
+        List<OrderItems> orderItems = orderDao.selectOrderItemsByOrderId(orderId);
+        
+        // 恢复商品库存
+        for (OrderItems item : orderItems) {
+            // 获取商品当前库存
+            Goods goods = goodsDao.selectById(item.getGoodsId());
+            if (goods != null) {
+                // 恢复库存
+                goodsDao.updateStock(goods.getId(), goods.getStock() + item.getQuantity());
+                
+                // 恢复销量
+                if (goods.getSalesVolume() != null && goods.getSalesVolume() >= item.getQuantity()) {
+                    goodsDao.updateSalesVolume(goods.getId(), -item.getQuantity());
+                }
+            }
         }
         
         // 更新订单状态为已取消(4)
@@ -407,15 +461,42 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "订单不存在");
         }
         
-        // 只有已完成(3)或已取消(4)的订单可以删除，确保订单已经结束
+        // 只有已完成或已取消的订单可以删除
         if (order.getStatus() != 3 && order.getStatus() != 4) {
-            throw new BusinessException(ResultCode.PARAM_ERROR, "只能删除已完成或已取消的订单");
+            throw new BusinessException(ResultCode.PARAM_ERROR, "当前订单状态不可删除");
         }
         
-        // 先删除订单商品
-        orderDao.deleteOrderItems(orderId);
-        
-        // 再删除订单
         return orderDao.deleteById(orderId) > 0;
+    }
+    
+    /**
+     * 管理员获取订单详情
+     * @param orderId 订单ID
+     * @return 订单信息
+     */
+    @Override
+    public Orders getAdminOrderDetail(Integer orderId) {
+        // 获取订单
+        Orders order = orderDao.selectById(orderId);
+        if (order == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "订单不存在");
+        }
+        
+        // 获取订单商品
+        List<OrderItems> orderItems = orderDao.selectOrderItemsByOrderId(orderId);
+        order.setOrderItems(orderItems);
+        
+        // 获取收货地址
+        UserAddress address = userAddressDao.selectById(order.getAddressId());
+        order.setAddress(address);
+        
+        return order;
+    }
+
+    @Override
+    public OrderStatisticsVO getOrderStatistics() {
+        int totalOrders = orderDao.count();
+        BigDecimal totalSales = orderDao.sumTotalAmount();
+        return new OrderStatisticsVO(totalOrders, totalSales);
     }
 }

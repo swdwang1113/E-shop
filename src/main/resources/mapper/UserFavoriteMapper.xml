@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ptumall.dao.UserFavoriteDao">
+    
+    <resultMap id="BaseResultMap" type="ptumall.model.UserFavorite">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="goods_id" property="goodsId"/>
+        <result column="create_time" property="createTime"/>
+        <association property="goods" javaType="ptumall.model.Goods">
+            <id column="g_id" property="id"/>
+            <result column="g_name" property="name"/>
+            <result column="g_price" property="price"/>
+            <result column="g_description" property="description"/>
+            <result column="g_category_id" property="categoryId"/>
+            <result column="g_stock" property="stock"/>
+            <result column="g_status" property="status"/>
+            <result column="g_image_url" property="imageUrl"/>
+        </association>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        id, user_id, goods_id, create_time
+    </sql>
+    
+    <insert id="insert" parameterType="ptumall.model.UserFavorite">
+        INSERT INTO user_favorite (user_id, goods_id)
+        VALUES (#{userId}, #{goodsId})
+    </insert>
+    
+    <delete id="delete">
+        DELETE FROM user_favorite
+        WHERE user_id = #{userId} AND goods_id = #{goodsId}
+    </delete>
+    
+    <select id="findByUserIdAndGoodsId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user_favorite
+        WHERE user_id = #{userId} AND goods_id = #{goodsId}
+    </select>
+    
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT 
+            uf.id, uf.user_id, uf.goods_id, uf.create_time,
+            g.id as g_id, g.name as g_name, g.price as g_price, 
+            g.description as g_description, g.category_id as g_category_id,
+            g.stock as g_stock, g.status as g_status, g.image_url as g_image_url
+        FROM user_favorite uf
+        LEFT JOIN goods g ON uf.goods_id = g.id
+        WHERE uf.user_id = #{userId}
+        ORDER BY uf.create_time DESC
+    </select>
+    
+    <select id="countByGoodsId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM user_favorite
+        WHERE goods_id = #{goodsId}
+    </select>
+    
+</mapper> 

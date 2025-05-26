@@ -25,13 +25,13 @@ public interface GoodsDao {
     
     /**
      * 查询商品列表
-     * @param categoryId 分类ID，可为null
+     * @param categoryIds 分类ID列表，可为null
      * @param keyword 关键词，可为null
      * @param sortBy 排序字段，可为null，可选值：price, rating, sales, newest
      * @param sortDirection 排序方向，可为null，可选值：asc, desc
      * @return 商品列表
      */
-    List<Goods> findList(@Param("categoryId") Integer categoryId, 
+    List<Goods> findList(@Param("categoryIds") List<Integer> categoryIds, 
                           @Param("keyword") String keyword,
                           @Param("sortBy") String sortBy,
                           @Param("sortDirection") String sortDirection);
@@ -95,4 +95,10 @@ public interface GoodsDao {
      * @return 影响的行数
      */
     int updateSalesVolume(@Param("id") Integer id, @Param("increment") Integer increment);
+    
+    /**
+     * 获取商品总数
+     * @return 商品总数
+     */
+    int count();
 }

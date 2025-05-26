@@ -8,13 +8,18 @@ spring:
     username: root
     password: 1113
     driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
 
 mybatis:
   mapper-locations: classpath:/mapper/*
 
 jwt:
   SING: "ptu202212900429" #密钥
-  expireTime: 30 #token有效时间 (分钟)
+  expireTime: 1440 #token有效时间 (分钟)
 pagehelper:
   helper-dialect: mysql
   reasonable: true

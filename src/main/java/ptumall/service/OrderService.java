@@ -2,6 +2,7 @@ package ptumall.service;
 
 import ptumall.model.Orders;
 import ptumall.vo.CreateOrderParam;
+import ptumall.vo.OrderStatisticsVO;
 import ptumall.vo.PageResult;
 
 import java.util.List;
@@ -97,4 +98,17 @@ public interface OrderService {
      * @return 是否成功
      */
     boolean deleteUserOrder(Integer userId, Integer orderId);
+    
+    /**
+     * 管理员获取订单详情
+     * @param orderId 订单ID
+     * @return 订单信息
+     */
+    Orders getAdminOrderDetail(Integer orderId);
+    
+    /**
+     * 获取订单统计数据（管理员接口）
+     * @return 订单统计数据
+     */
+    OrderStatisticsVO getOrderStatistics();
 }

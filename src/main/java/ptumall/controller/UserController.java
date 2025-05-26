@@ -5,8 +5,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import ptumall.config.JWTInterceptors;
 import ptumall.model.User;
+import ptumall.service.FileService;
 import ptumall.service.UserService;
 import ptumall.utils.JWTUtils;
 import ptumall.vo.Result;
@@ -23,6 +25,9 @@ public class UserController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private FileService fileService;
     
     @ApiOperation("用户注册")
     @PostMapping("/register")
@@ -100,6 +105,72 @@ public class UserController {
             return Result.success(user);
         } else {
             return Result.failure(ResultCode.NOT_FOUND, "用户不存在");
+        }
+    }
+    
+    @ApiOperation("更新用户信息")
+    @PutMapping("/update-info")
+    public Result<User> updateUserInfo(@RequestBody User user, HttpServletRequest request) {
+        // 从请求属性中获取JWT拦截器存储的用户ID
+        Integer userId = (Integer) request.getAttribute(JWTInterceptors.USER_ID_KEY);
+        if (userId == null) {
+            return Result.failure(ResultCode.UNAUTHORIZED, "请先登录");
+        }
+        
+        // 设置用户ID，防止修改其他用户信息
+        user.setId(userId);
+        
+        // 不允许通过此接口修改密码和角色
+        user.setPassword(null);
+        user.setRole(null);
+        
+        // 更新用户信息
+        boolean updated = userService.updateUser(user);
+        if (updated) {
+            // 获取更新后的用户信息
+            User updatedUser = userService.getUserById(userId);
+            updatedUser.setPassword(null);
+            return Result.success(updatedUser);
+        } else {
+            return Result.failure(ResultCode.FAILED, "更新用户信息失败");
+        }
+    }
+    
+    @ApiOperation("上传用户头像")
+    @PostMapping("/upload-avatar")
+    public Result<String> uploadAvatar(@ApiParam(value = "头像图片", required = true) 
+                                        @RequestParam("file") MultipartFile file,
+                                        HttpServletRequest request) {
+        // 从请求属性中获取JWT拦截器存储的用户ID
+        Integer userId = (Integer) request.getAttribute(JWTInterceptors.USER_ID_KEY);
+        if (userId == null) {
+            return Result.failure(ResultCode.UNAUTHORIZED, "请先登录");
+        }
+        
+        // 检查文件类型
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return Result.failure(ResultCode.PARAM_ERROR, "只能上传图片文件");
+        }
+        
+        // 上传头像到avatars目录
+        String avatarUrl = fileService.uploadImage(file, "avatars");
+        if (avatarUrl == null) {
+            return Result.failure(ResultCode.FAILED, "头像上传失败");
+        }
+        
+        // 更新用户头像URL
+        User user = new User();
+        user.setId(userId);
+        user.setAvatar(avatarUrl);
+        
+        boolean updated = userService.updateUser(user);
+        if (updated) {
+            return Result.success(avatarUrl);
+        } else {
+            // 如果更新失败，删除已上传的图片
+            fileService.deleteImage(avatarUrl);
+            return Result.failure(ResultCode.FAILED, "更新用户头像失败");
         }
     }
 }

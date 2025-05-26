@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ptumall.dao.OrderDao">
+    <!-- 订单结果映射 -->
+    <resultMap id="OrderResultMap" type="ptumall.model.Orders">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="status" property="status"/>
+        <result column="payment_type" property="paymentType"/>
+        <result column="payment_time" property="paymentTime"/>
+        <result column="shipping_time" property="shippingTime"/>
+        <result column="completion_time" property="completionTime"/>
+        <result column="address_id" property="addressId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 订单商品结果映射 -->
+    <resultMap id="OrderItemResultMap" type="ptumall.model.OrderItems">
+        <id column="id" property="id"/>
+        <result column="order_id" property="orderId"/>
+        <result column="goods_id" property="goodsId"/>
+        <result column="goods_name" property="goodsName"/>
+        <result column="goods_image" property="goodsImage"/>
+        <result column="goods_price" property="goodsPrice"/>
+        <result column="quantity" property="quantity"/>
+        <result column="total_price" property="totalPrice"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 插入订单 -->
+    <insert id="insert" parameterType="ptumall.model.Orders" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (
+            user_id, order_no, total_amount, status, payment_type, payment_time, 
+            shipping_time, completion_time, address_id, create_time, update_time
+        ) VALUES (
+            #{userId}, #{orderNo}, #{totalAmount}, #{status}, #{paymentType}, #{paymentTime}, 
+            #{shippingTime}, #{completionTime}, #{addressId}, NOW(), NOW()
+        )
+    </insert>
+    
+    <!-- 插入订单商品 -->
+    <insert id="insertOrderItem" parameterType="ptumall.model.OrderItems" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_items (
+            order_id, goods_id, goods_name, goods_image, goods_price, quantity, total_price, create_time
+        ) VALUES (
+            #{orderId}, #{goodsId}, #{goodsName}, #{goodsImage}, #{goodsPrice}, #{quantity}, #{totalPrice}, NOW()
+        )
+    </insert>
+    
+    <!-- 批量插入订单商品 -->
+    <insert id="batchInsertOrderItems" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_items (
+            order_id, goods_id, goods_name, goods_image, goods_price, quantity, total_price, create_time
+        ) VALUES 
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.orderId}, #{item.goodsId}, #{item.goodsName}, #{item.goodsImage}, 
+                #{item.goodsPrice}, #{item.quantity}, #{item.totalPrice}, NOW()
+            )
+        </foreach>
+    </insert>
+    
+    <!-- 根据ID查询订单 -->
+    <select id="selectById" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE id = #{id}
+    </select>
+    
+    <!-- 根据订单编号查询订单 -->
+    <select id="selectByOrderNo" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE order_no = #{orderNo}
+    </select>
+    
+    <!-- 根据用户ID查询订单列表 -->
+    <select id="selectByUserId" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据订单ID查询订单商品 -->
+    <select id="selectOrderItemsByOrderId" resultMap="OrderItemResultMap">
+        SELECT * FROM order_items WHERE order_id = #{orderId}
+    </select>
+    
+    <!-- 更新订单状态 -->
+    <update id="updateStatus">
+        UPDATE orders 
+        SET status = #{status}, update_time = NOW()
+        <if test="status == 1">
+            , payment_time = NOW()
+        </if>
+        <if test="status == 2">
+            , shipping_time = NOW()
+        </if>
+        <if test="status == 3">
+            , completion_time = NOW()
+        </if>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 支付订单 -->
+    <update id="pay">
+        UPDATE orders 
+        SET status = 1, payment_type = #{paymentType}, payment_time = NOW(), update_time = NOW()
+        WHERE id = #{id} AND status = 0
+    </update>
+    
+    <!-- 获取用户订单数量 -->
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM orders WHERE user_id = #{userId}
+    </select>
+    
+    <!-- 查询所有订单 -->
+    <select id="selectAll" resultMap="OrderResultMap">
+        SELECT * FROM orders ORDER BY create_time DESC
+    </select>
+    
+    <!-- 删除订单商品 -->
+    <delete id="deleteOrderItems">
+        DELETE FROM order_items WHERE order_id = #{orderId}
+    </delete>
+    
+    <!-- 删除订单 -->
+    <delete id="deleteById">
+        DELETE FROM orders WHERE id = #{id}
+    </delete>
+
+    <!-- 获取订单总数 -->
+    <select id="count" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM orders
+    </select>
+
+    <!-- 获取销售总额 -->
+    <select id="sumTotalAmount" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(total_amount), 0) FROM orders WHERE status > 0
+    </select>
+</mapper> 

@@ -1,6 +1,7 @@
 package ptumall.service;
 
 import ptumall.model.Goods;
+import ptumall.vo.PageResult;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -21,6 +22,18 @@ public interface GoodsService {
      * @return 商品列表
      */
     List<Goods> getGoodsList(Integer categoryId, String keyword, String sortBy, String sortDirection);
+    
+    /**
+     * 查询商品列表（分页）
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @param categoryId 分类ID，可为null
+     * @param keyword 关键词，可为null
+     * @param sortBy 排序字段，可为null
+     * @param sortDirection 排序方向，可为null
+     * @return 商品列表分页结果
+     */
+    PageResult<Goods> getGoodsListPage(Integer pageNum, Integer pageSize, Integer categoryId, String keyword, String sortBy, String sortDirection);
     
     /**
      * 添加商品
@@ -81,4 +94,10 @@ public interface GoodsService {
      * @return 是否成功
      */
     boolean updateSalesVolume(Integer id, Integer increment);
+    
+    /**
+     * 获取商品总数
+     * @return 商品总数
+     */
+    int getGoodsCount();
 }

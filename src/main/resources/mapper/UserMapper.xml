@@ -10,6 +10,9 @@
         <result property="password" column="password"/>
         <result property="gender" column="gender"/>
         <result property="role" column="role"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="avatar" column="avatar"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
     </resultMap>
@@ -31,8 +34,8 @@
     
     <!-- 插入新用户 -->
     <insert id="insert" parameterType="ptumall.model.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user (username, password, gender, role, create_time, update_time)
-        VALUES (#{username}, #{password}, #{gender}, #{role}, #{createTime}, #{updateTime})
+        INSERT INTO user (username, password, gender, role, phone, email, avatar, create_time, update_time)
+        VALUES (#{username}, #{password}, #{gender}, #{role}, #{phone}, #{email}, #{avatar}, #{createTime}, #{updateTime})
     </insert>
     
     <!-- 更新用户信息 -->
@@ -43,6 +46,9 @@
             <if test="password != null">password = #{password},</if>
             <if test="gender != null">gender = #{gender},</if>
             <if test="role != null">role = #{role},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
             <if test="updateTime != null">update_time = #{updateTime}</if>
         </set>
         WHERE id = #{id}
