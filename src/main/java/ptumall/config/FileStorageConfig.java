@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import ptumall.service.FileService;
 import ptumall.service.impl.LocalFileServiceImpl;
+import ptumall.service.impl.OssFileServiceImpl;
 
 /**
  * 文件存储配置类
@@ -20,9 +21,12 @@ public class FileStorageConfig {
     @Autowired
     private LocalFileServiceImpl localFileService;
     
+    @Autowired
+    private OssFileServiceImpl ossFileService;
+    
     /**
      * 根据配置选择文件存储服务
-     * 目前只有本地存储，未来可扩展为OSS等云存储
+     * 支持本地存储和阿里云OSS存储
      */
     @Bean
     @Primary
@@ -30,11 +34,11 @@ public class FileStorageConfig {
         // 根据配置选择存储实现
         switch (storageType.toLowerCase()) {
             case "local":
+                return localFileService;
+            case "oss":
+                return ossFileService;
             default:
                 return localFileService;
-            // 未来可以添加OSS等其他存储方式
-            // case "oss":
-            //     return ossFileService;
         }
     }
 } 

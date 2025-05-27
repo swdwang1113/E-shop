@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ptumall.model.Goods;
 import ptumall.service.GoodsService;
+import ptumall.vo.PageResult;
 import ptumall.vo.Result;
 import ptumall.vo.ResultCode;
 
@@ -22,15 +23,19 @@ public class GoodsController {
     
     @ApiOperation("获取商品列表")
     @GetMapping("/list")
-    public Result<List<Goods>> getGoodsList(
+    public Result<PageResult<Goods>> getGoodsList(
+            @ApiParam(value = "页码", required = false, defaultValue = "1") 
+            @RequestParam(required = false, defaultValue = "1") Integer pageNum,
+            @ApiParam(value = "每页数量", required = false, defaultValue = "10") 
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize,
             @ApiParam(value = "分类ID", required = false) @RequestParam(required = false) Integer categoryId,
             @ApiParam(value = "搜索关键词", required = false) @RequestParam(required = false) String keyword,
             @ApiParam(value = "排序字段", required = false, allowableValues = "price,rating,sales,newest") 
             @RequestParam(required = false) String sortBy,
             @ApiParam(value = "排序方向", required = false, allowableValues = "asc,desc") 
             @RequestParam(required = false, defaultValue = "desc") String sortDirection) {
-        List<Goods> goodsList = goodsService.getGoodsList(categoryId, keyword, sortBy, sortDirection);
-        return Result.success(goodsList);
+        PageResult<Goods> goodsPage = goodsService.getGoodsListPage(pageNum, pageSize, categoryId, keyword, sortBy, sortDirection);
+        return Result.success(goodsPage);
     }
     
     @ApiOperation("获取商品详情")
