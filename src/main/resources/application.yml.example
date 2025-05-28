@@ -1,0 +1,49 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: ptumall
+  datasource:
+    url: jdbc:mysql://localhost:3306/eshop?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf-8
+    username: yourUsername
+    password: yourPassword
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
+
+mybatis:
+  mapper-locations: classpath:/mapper/*
+
+jwt:
+  SING: "yourJwtSecret" #密钥
+  expireTime: 1440 #token有效时间 (分钟)
+pagehelper:
+  helper-dialect: mysql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+  
+# 文件存储配置
+file:
+  # 存储类型：local(本地存储), oss(阿里云OSS)
+  storage-type: oss
+  save-path: "/path/to/your/images/"
+  
+# 图片URL前缀配置  
+image:
+  prefix-url: "http://127.0.0.1:8080"
+
+# 阿里云OSS配置
+aliyun:
+  oss:
+    endpoint: your-endpoint.aliyuncs.com
+    accessKeyId: yourAccessKeyId
+    accessKeySecret: yourAccessKeySecret
+    bucketName: yourBucketName
+    urlPrefix: https://your-bucket.oss-region.aliyuncs.com
+
+swagger:
+  enabled: true 
