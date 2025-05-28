@@ -49,6 +49,24 @@ public interface UserService {
     PageResult<User> getUserList(Integer pageNum, Integer pageSize);
     
     /**
+     * 根据用户名搜索用户（分页）
+     * @param username 用户名关键词
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 用户列表
+     */
+    PageResult<User> searchUsersByUsername(String username, Integer pageNum, Integer pageSize);
+    
+    /**
+     * 根据手机号搜索用户（分页）
+     * @param phone 手机号关键词
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 用户列表
+     */
+    PageResult<User> searchUsersByPhone(String phone, Integer pageNum, Integer pageSize);
+    
+    /**
      * 删除用户
      * @param id 用户ID
      * @return 删除成功返回true，失败返回false

@@ -61,19 +61,30 @@ public class OrderController {
     @ApiOperation("获取订单列表")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "页码", required = true, paramType = "query"),
-        @ApiImplicitParam(name = "pageSize", value = "每页数量", required = true, paramType = "query")
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", required = true, paramType = "query"),
+        @ApiImplicitParam(name = "status", value = "订单状态(可选): 0-待付款 1-已付款 2-已发货 3-已完成 4-已取消", required = false, paramType = "query")
     })
     @GetMapping("")
     public Result<PageResult<Orders>> getOrderList(
         HttpServletRequest request,
         @RequestParam(defaultValue = "1") Integer pageNum,
-        @RequestParam(defaultValue = "10") Integer pageSize
+        @RequestParam(defaultValue = "10") Integer pageSize,
+        @RequestParam(required = false) Byte status
     ) {
         Integer userId = (Integer) request.getAttribute(JWTInterceptors.USER_ID_KEY);
         if (userId == null) {
             return Result.unauthorized();
         }
-        PageResult<Orders> result = orderService.getOrderList(userId, pageNum, pageSize);
+        
+        PageResult<Orders> result;
+        if (status == null) {
+            // 不传状态参数，查询全部订单
+            result = orderService.getOrderList(userId, pageNum, pageSize);
+        } else {
+            // 根据状态查询订单
+            result = orderService.getOrderListByStatus(userId, status, pageNum, pageSize);
+        }
+        
         return Result.success(result);
     }
 

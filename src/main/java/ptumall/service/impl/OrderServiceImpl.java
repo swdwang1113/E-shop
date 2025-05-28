@@ -280,6 +280,40 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * 根据状态获取用户订单列表
+     * @param userId 用户ID
+     * @param status 订单状态
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    @Override
+    public PageResult<Orders> getOrderListByStatus(Integer userId, Byte status, Integer pageNum, Integer pageSize) {
+        // 分页查询
+        PageHelper.startPage(pageNum, pageSize);
+        List<Orders> orderList = orderDao.selectByUserIdAndStatus(userId, status);
+        PageInfo<Orders> pageInfo = new PageInfo<>(orderList);
+        
+        // 获取订单商品和收货地址
+        for (Orders order : orderList) {
+            List<OrderItems> orderItems = orderDao.selectOrderItemsByOrderId(order.getId());
+            order.setOrderItems(orderItems);
+            
+            UserAddress address = userAddressDao.selectById(order.getAddressId());
+            order.setAddress(address);
+        }
+        
+        // 构建分页结果
+        return new PageResult<>(
+            pageInfo.getTotal(), 
+            pageInfo.getPages(), 
+            pageInfo.getPageNum(), 
+            pageInfo.getPageSize(), 
+            orderList
+        );
+    }
+
+    /**
      * 取消订单
      * @param userId 用户ID
      * @param orderId 订单ID
@@ -381,6 +415,173 @@ public class OrderServiceImpl implements OrderService {
         // 分页查询所有订单
         PageHelper.startPage(pageNum, pageSize);
         List<Orders> orderList = orderDao.selectAll();
+        PageInfo<Orders> pageInfo = new PageInfo<>(orderList);
+        
+        // 获取订单商品和收货地址
+        for (Orders order : orderList) {
+            List<OrderItems> orderItems = orderDao.selectOrderItemsByOrderId(order.getId());
+            order.setOrderItems(orderItems);
+            
+            UserAddress address = userAddressDao.selectById(order.getAddressId());
+            order.setAddress(address);
+        }
+        
+        // 构建分页结果
+        return new PageResult<>(
+            pageInfo.getTotal(), 
+            pageInfo.getPages(), 
+            pageInfo.getPageNum(), 
+            pageInfo.getPageSize(), 
+            orderList
+        );
+    }
+    
+    /**
+     * 根据状态获取所有订单列表（管理员接口）
+     * @param status 订单状态
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    @Override
+    public PageResult<Orders> getAllOrderListByStatus(Byte status, Integer pageNum, Integer pageSize) {
+        // 分页查询所有订单
+        PageHelper.startPage(pageNum, pageSize);
+        List<Orders> orderList = orderDao.selectAllByStatus(status);
+        PageInfo<Orders> pageInfo = new PageInfo<>(orderList);
+        
+        // 获取订单商品和收货地址
+        for (Orders order : orderList) {
+            List<OrderItems> orderItems = orderDao.selectOrderItemsByOrderId(order.getId());
+            order.setOrderItems(orderItems);
+            
+            UserAddress address = userAddressDao.selectById(order.getAddressId());
+            order.setAddress(address);
+        }
+        
+        // 构建分页结果
+        return new PageResult<>(
+            pageInfo.getTotal(), 
+            pageInfo.getPages(), 
+            pageInfo.getPageNum(), 
+            pageInfo.getPageSize(), 
+            orderList
+        );
+    }
+    
+    /**
+     * 根据订单号关键词搜索订单（管理员接口）
+     * @param orderNo 订单号关键词
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    @Override
+    public PageResult<Orders> searchOrdersByOrderNo(String orderNo, Integer pageNum, Integer pageSize) {
+        // 分页查询订单
+        PageHelper.startPage(pageNum, pageSize);
+        List<Orders> orderList = orderDao.selectByOrderNoKeyword(orderNo);
+        PageInfo<Orders> pageInfo = new PageInfo<>(orderList);
+        
+        // 获取订单商品和收货地址
+        for (Orders order : orderList) {
+            List<OrderItems> orderItems = orderDao.selectOrderItemsByOrderId(order.getId());
+            order.setOrderItems(orderItems);
+            
+            UserAddress address = userAddressDao.selectById(order.getAddressId());
+            order.setAddress(address);
+        }
+        
+        // 构建分页结果
+        return new PageResult<>(
+            pageInfo.getTotal(), 
+            pageInfo.getPages(), 
+            pageInfo.getPageNum(), 
+            pageInfo.getPageSize(), 
+            orderList
+        );
+    }
+    
+    /**
+     * 根据用户ID搜索订单（管理员接口）
+     * @param userId 用户ID
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    @Override
+    public PageResult<Orders> searchOrdersByUserId(Integer userId, Integer pageNum, Integer pageSize) {
+        // 分页查询订单
+        PageHelper.startPage(pageNum, pageSize);
+        List<Orders> orderList = orderDao.selectByUserIdAdmin(userId);
+        PageInfo<Orders> pageInfo = new PageInfo<>(orderList);
+        
+        // 获取订单商品和收货地址
+        for (Orders order : orderList) {
+            List<OrderItems> orderItems = orderDao.selectOrderItemsByOrderId(order.getId());
+            order.setOrderItems(orderItems);
+            
+            UserAddress address = userAddressDao.selectById(order.getAddressId());
+            order.setAddress(address);
+        }
+        
+        // 构建分页结果
+        return new PageResult<>(
+            pageInfo.getTotal(), 
+            pageInfo.getPages(), 
+            pageInfo.getPageNum(), 
+            pageInfo.getPageSize(), 
+            orderList
+        );
+    }
+    
+    /**
+     * 根据订单号关键词和状态搜索订单（管理员接口）
+     * @param orderNo 订单号关键词
+     * @param status 订单状态
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    @Override
+    public PageResult<Orders> searchOrdersByOrderNoAndStatus(String orderNo, Byte status, Integer pageNum, Integer pageSize) {
+        // 分页查询订单
+        PageHelper.startPage(pageNum, pageSize);
+        List<Orders> orderList = orderDao.selectByOrderNoAndStatus(orderNo, status);
+        PageInfo<Orders> pageInfo = new PageInfo<>(orderList);
+        
+        // 获取订单商品和收货地址
+        for (Orders order : orderList) {
+            List<OrderItems> orderItems = orderDao.selectOrderItemsByOrderId(order.getId());
+            order.setOrderItems(orderItems);
+            
+            UserAddress address = userAddressDao.selectById(order.getAddressId());
+            order.setAddress(address);
+        }
+        
+        // 构建分页结果
+        return new PageResult<>(
+            pageInfo.getTotal(), 
+            pageInfo.getPages(), 
+            pageInfo.getPageNum(), 
+            pageInfo.getPageSize(), 
+            orderList
+        );
+    }
+    
+    /**
+     * 根据用户ID和状态搜索订单（管理员接口）
+     * @param userId 用户ID
+     * @param status 订单状态
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    @Override
+    public PageResult<Orders> searchOrdersByUserIdAndStatus(Integer userId, Byte status, Integer pageNum, Integer pageSize) {
+        // 分页查询订单
+        PageHelper.startPage(pageNum, pageSize);
+        List<Orders> orderList = orderDao.selectByUserIdAndStatusAdmin(userId, status);
         PageInfo<Orders> pageInfo = new PageInfo<>(orderList);
         
         // 获取订单商品和收货地址

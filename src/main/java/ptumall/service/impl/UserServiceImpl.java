@@ -111,6 +111,48 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    public PageResult<User> searchUsersByUsername(String username, Integer pageNum, Integer pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<User> userList = userDao.findByUsernameLike(username);
+        PageInfo<User> pageInfo = new PageInfo<>(userList);
+        
+        // 隐藏密码
+        for (User user : userList) {
+            user.setPassword(null);
+        }
+        
+        PageResult<User> pageResult = new PageResult<>();
+        pageResult.setList(userList);
+        pageResult.setTotal(pageInfo.getTotal());
+        pageResult.setPages(pageInfo.getPages());
+        pageResult.setPageNum(pageInfo.getPageNum());
+        pageResult.setPageSize(pageInfo.getPageSize());
+        
+        return pageResult;
+    }
+    
+    @Override
+    public PageResult<User> searchUsersByPhone(String phone, Integer pageNum, Integer pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<User> userList = userDao.findByPhoneLike(phone);
+        PageInfo<User> pageInfo = new PageInfo<>(userList);
+        
+        // 隐藏密码
+        for (User user : userList) {
+            user.setPassword(null);
+        }
+        
+        PageResult<User> pageResult = new PageResult<>();
+        pageResult.setList(userList);
+        pageResult.setTotal(pageInfo.getTotal());
+        pageResult.setPages(pageInfo.getPages());
+        pageResult.setPageNum(pageInfo.getPageNum());
+        pageResult.setPageSize(pageInfo.getPageSize());
+        
+        return pageResult;
+    }
+    
+    @Override
     @Transactional
     public boolean deleteUser(Integer id) {
         // 检查用户是否存在

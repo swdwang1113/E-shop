@@ -45,6 +45,16 @@ public interface OrderService {
     PageResult<Orders> getOrderList(Integer userId, Integer pageNum, Integer pageSize);
     
     /**
+     * 根据状态获取用户订单列表
+     * @param userId 用户ID
+     * @param status 订单状态
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    PageResult<Orders> getOrderListByStatus(Integer userId, Byte status, Integer pageNum, Integer pageSize);
+    
+    /**
      * 取消订单
      * @param userId 用户ID
      * @param orderId 订单ID
@@ -76,6 +86,53 @@ public interface OrderService {
      * @return 订单列表分页结果
      */
     PageResult<Orders> getAllOrderList(Integer pageNum, Integer pageSize);
+    
+    /**
+     * 根据状态获取所有订单列表（管理员接口）
+     * @param status 订单状态
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    PageResult<Orders> getAllOrderListByStatus(Byte status, Integer pageNum, Integer pageSize);
+    
+    /**
+     * 根据订单号关键词搜索订单（管理员接口）
+     * @param orderNo 订单号关键词
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    PageResult<Orders> searchOrdersByOrderNo(String orderNo, Integer pageNum, Integer pageSize);
+    
+    /**
+     * 根据用户ID搜索订单（管理员接口）
+     * @param userId 用户ID
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    PageResult<Orders> searchOrdersByUserId(Integer userId, Integer pageNum, Integer pageSize);
+    
+    /**
+     * 根据订单号关键词和状态搜索订单（管理员接口）
+     * @param orderNo 订单号关键词
+     * @param status 订单状态
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    PageResult<Orders> searchOrdersByOrderNoAndStatus(String orderNo, Byte status, Integer pageNum, Integer pageSize);
+    
+    /**
+     * 根据用户ID和状态搜索订单（管理员接口）
+     * @param userId 用户ID
+     * @param status 订单状态
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 订单列表分页结果
+     */
+    PageResult<Orders> searchOrdersByUserIdAndStatus(Integer userId, Byte status, Integer pageNum, Integer pageSize);
     
     /**
      * 订单发货（管理员接口）

@@ -30,20 +30,54 @@ public class AdminOrderController {
     @ApiOperation("获取所有订单列表")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "页码", required = true, paramType = "query"),
-        @ApiImplicitParam(name = "pageSize", value = "每页数量", required = true, paramType = "query")
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", required = true, paramType = "query"),
+        @ApiImplicitParam(name = "status", value = "订单状态(可选): 0-待付款 1-已付款 2-已发货 3-已完成 4-已取消", required = false, paramType = "query"),
+        @ApiImplicitParam(name = "orderNo", value = "订单号关键词(可选)", required = false, paramType = "query"),
+        @ApiImplicitParam(name = "userId", value = "用户ID(可选)", required = false, paramType = "query")
     })
     @GetMapping("")
     public Result<PageResult<Orders>> getAllOrders(
         HttpServletRequest request,
         @RequestParam(defaultValue = "1") Integer pageNum,
-        @RequestParam(defaultValue = "10") Integer pageSize
+        @RequestParam(defaultValue = "10") Integer pageSize,
+        @RequestParam(required = false) Byte status,
+        @RequestParam(required = false) String orderNo,
+        @RequestParam(required = false) Integer userId
     ) {
         // 权限校验：只有管理员可以查看所有订单
         if (!authUtils.isAdmin(request)) {
             return Result.unauthorized();
         }
         
-        PageResult<Orders> result = orderService.getAllOrderList(pageNum, pageSize);
+        PageResult<Orders> result;
+        
+        // 根据不同的参数组合调用不同的查询方法
+        if (orderNo != null && !orderNo.trim().isEmpty()) {
+            // 优先按订单号查询
+            if (status != null) {
+                // 订单号 + 状态
+                result = orderService.searchOrdersByOrderNoAndStatus(orderNo, status, pageNum, pageSize);
+            } else {
+                // 仅订单号
+                result = orderService.searchOrdersByOrderNo(orderNo, pageNum, pageSize);
+            }
+        } else if (userId != null) {
+            // 按用户ID查询
+            if (status != null) {
+                // 用户ID + 状态
+                result = orderService.searchOrdersByUserIdAndStatus(userId, status, pageNum, pageSize);
+            } else {
+                // 仅用户ID
+                result = orderService.searchOrdersByUserId(userId, pageNum, pageSize);
+            }
+        } else if (status != null) {
+            // 仅按状态查询
+            result = orderService.getAllOrderListByStatus(status, pageNum, pageSize);
+        } else {
+            // 查询所有订单
+            result = orderService.getAllOrderList(pageNum, pageSize);
+        }
+        
         return Result.success(result);
     }
     

@@ -59,6 +59,16 @@
         SELECT * FROM user ORDER BY create_time DESC
     </select>
     
+    <!-- 根据用户名模糊搜索用户 -->
+    <select id="findByUsernameLike" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT * FROM user WHERE username LIKE CONCAT('%', #{username}, '%') ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据手机号模糊搜索用户 -->
+    <select id="findByPhoneLike" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT * FROM user WHERE phone LIKE CONCAT('%', #{phone}, '%') ORDER BY create_time DESC
+    </select>
+    
     <!-- 删除用户 -->
     <delete id="deleteById" parameterType="java.lang.Integer">
         DELETE FROM user WHERE id = #{id}

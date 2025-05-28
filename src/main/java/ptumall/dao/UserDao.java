@@ -50,6 +50,20 @@ public interface UserDao {
     List<User> findAll();
     
     /**
+     * 根据用户名模糊搜索用户
+     * @param username 用户名关键词
+     * @return 用户列表
+     */
+    List<User> findByUsernameLike(String username);
+    
+    /**
+     * 根据手机号模糊搜索用户
+     * @param phone 手机号关键词
+     * @return 用户列表
+     */
+    List<User> findByPhoneLike(String phone);
+    
+    /**
      * 删除用户
      * @param id 用户ID
      * @return 影响的行数

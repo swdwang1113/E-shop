@@ -30,20 +30,37 @@ public class AdminUserController {
     @ApiOperation("获取所有用户列表")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "pageNum", value = "页码", required = true, paramType = "query"),
-        @ApiImplicitParam(name = "pageSize", value = "每页数量", required = true, paramType = "query")
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", required = true, paramType = "query"),
+        @ApiImplicitParam(name = "username", value = "用户名关键词(可选)", required = false, paramType = "query"),
+        @ApiImplicitParam(name = "phone", value = "手机号关键词(可选)", required = false, paramType = "query")
     })
     @GetMapping("")
     public Result<PageResult<User>> getAllUsers(
         HttpServletRequest request,
         @RequestParam(defaultValue = "1") Integer pageNum,
-        @RequestParam(defaultValue = "10") Integer pageSize
+        @RequestParam(defaultValue = "10") Integer pageSize,
+        @RequestParam(required = false) String username,
+        @RequestParam(required = false) String phone
     ) {
         // 权限校验：只有管理员可以查看所有用户
         if (!authUtils.isAdmin(request)) {
             return Result.unauthorized();
         }
         
-        PageResult<User> result = userService.getUserList(pageNum, pageSize);
+        PageResult<User> result;
+        
+        // 根据不同的参数组合调用不同的查询方法
+        if (username != null && !username.trim().isEmpty()) {
+            // 优先按用户名查询
+            result = userService.searchUsersByUsername(username, pageNum, pageSize);
+        } else if (phone != null && !phone.trim().isEmpty()) {
+            // 按手机号查询
+            result = userService.searchUsersByPhone(phone, pageNum, pageSize);
+        } else {
+            // 查询所有用户
+            result = userService.getUserList(pageNum, pageSize);
+        }
+        
         return Result.success(result);
     }
     

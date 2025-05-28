@@ -78,6 +78,11 @@
         SELECT * FROM orders WHERE user_id = #{userId} ORDER BY create_time DESC
     </select>
     
+    <!-- 根据用户ID和订单状态查询订单列表 -->
+    <select id="selectByUserIdAndStatus" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE user_id = #{userId} AND status = #{status} ORDER BY create_time DESC
+    </select>
+    
     <!-- 根据订单ID查询订单商品 -->
     <select id="selectOrderItemsByOrderId" resultMap="OrderItemResultMap">
         SELECT * FROM order_items WHERE order_id = #{orderId}
@@ -114,6 +119,37 @@
     <!-- 查询所有订单 -->
     <select id="selectAll" resultMap="OrderResultMap">
         SELECT * FROM orders ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据状态查询所有订单 -->
+    <select id="selectAllByStatus" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE status = #{status} ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据订单号模糊查询订单 -->
+    <select id="selectByOrderNoKeyword" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE order_no LIKE CONCAT('%', #{orderNo}, '%') ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据用户ID查询订单(管理员) -->
+    <select id="selectByUserIdAdmin" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据订单号关键词和状态查询订单 -->
+    <select id="selectByOrderNoAndStatus" resultMap="OrderResultMap">
+        SELECT * FROM orders 
+        WHERE order_no LIKE CONCAT('%', #{orderNo}, '%') 
+        AND status = #{status} 
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据用户ID和状态查询订单(管理员) -->
+    <select id="selectByUserIdAndStatusAdmin" resultMap="OrderResultMap">
+        SELECT * FROM orders 
+        WHERE user_id = #{userId} 
+        AND status = #{status} 
+        ORDER BY create_time DESC
     </select>
     
     <!-- 删除订单商品 -->

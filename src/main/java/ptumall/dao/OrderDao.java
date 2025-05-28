@@ -53,6 +53,14 @@ public interface OrderDao {
     List<Orders> selectByUserId(Integer userId);
     
     /**
+     * 根据用户ID和订单状态查询订单列表
+     * @param userId 用户ID
+     * @param status 订单状态
+     * @return 订单列表
+     */
+    List<Orders> selectByUserIdAndStatus(@Param("userId") Integer userId, @Param("status") Byte status);
+    
+    /**
      * 根据订单ID查询订单商品
      * @param orderId 订单ID
      * @return 订单商品列表
@@ -87,6 +95,43 @@ public interface OrderDao {
      * @return 订单列表
      */
     List<Orders> selectAll();
+    
+    /**
+     * 根据订单状态查询所有订单
+     * @param status 订单状态
+     * @return 订单列表
+     */
+    List<Orders> selectAllByStatus(Byte status);
+    
+    /**
+     * 根据订单号模糊查询订单
+     * @param orderNo 订单号关键词
+     * @return 订单列表
+     */
+    List<Orders> selectByOrderNoKeyword(String orderNo);
+    
+    /**
+     * 根据用户ID查询订单
+     * @param userId 用户ID
+     * @return 订单列表
+     */
+    List<Orders> selectByUserIdAdmin(Integer userId);
+    
+    /**
+     * 根据订单号关键词和状态查询订单
+     * @param orderNo 订单号关键词
+     * @param status 订单状态
+     * @return 订单列表
+     */
+    List<Orders> selectByOrderNoAndStatus(@Param("orderNo") String orderNo, @Param("status") Byte status);
+    
+    /**
+     * 根据用户ID和状态查询订单
+     * @param userId 用户ID
+     * @param status 订单状态
+     * @return 订单列表
+     */
+    List<Orders> selectByUserIdAndStatusAdmin(@Param("userId") Integer userId, @Param("status") Byte status);
     
     /**
      * 删除订单商品
