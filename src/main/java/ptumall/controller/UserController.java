@@ -11,10 +11,12 @@ import ptumall.model.User;
 import ptumall.service.FileService;
 import ptumall.service.UserService;
 import ptumall.utils.JWTUtils;
+import ptumall.vo.LoginParam;
 import ptumall.vo.Result;
 import ptumall.vo.ResultCode;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,15 +58,26 @@ public class UserController {
     
     @ApiOperation("用户登录")
     @PostMapping("/login")
-    public Result<Map<String, String>> login(@RequestBody User user) {
+    public Result<Map<String, String>> login(@RequestBody LoginParam loginParam, HttpServletRequest request) {
         // 基本参数验证
-        if (user.getUsername() == null || user.getUsername().trim().isEmpty() ||
-            user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+        if (loginParam.getUsername() == null || loginParam.getUsername().trim().isEmpty() ||
+            loginParam.getPassword() == null || loginParam.getPassword().trim().isEmpty() ||
+            loginParam.getCaptcha() == null || loginParam.getCaptcha().trim().isEmpty()) {
             return Result.failure(ResultCode.PARAMS_IS_BLANK);
         }
         
+        // 验证码校验
+        HttpSession session = request.getSession();
+        String captchaCode = (String) session.getAttribute("captchaCode");
+        if (captchaCode == null || !captchaCode.equalsIgnoreCase(loginParam.getCaptcha())) {
+            return Result.failure(ResultCode.FAILED, "验证码错误");
+        }
+        
+        // 验证码使用后立即清除，防止重复使用
+        session.removeAttribute("captchaCode");
+        
         // 登录验证
-        User userFromDb = userService.login(user.getUsername(), user.getPassword());
+        User userFromDb = userService.login(loginParam.getUsername(), loginParam.getPassword());
         if (userFromDb == null) {
             return Result.failure(ResultCode.UNAUTHORIZED, "用户名或密码错误");
         }

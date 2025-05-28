@@ -14,6 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(new JWTInterceptors()).
                 addPathPatterns("/**")//所有接口进行拦截
                 .excludePathPatterns("/user/login","/user/register","/user/check-username")//登录、注册、检查用户名放行
+                .excludePathPatterns("/captcha/get")//验证码接口放行
                 .excludePathPatterns("/goods/list","/goods/*","/goods/recommend")//商品查询接口放行
                 .excludePathPatterns("/category/list","/category/*")//商品分类查询接口放行
                 .excludePathPatterns("/img/**")//放行图片
