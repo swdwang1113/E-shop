@@ -15,6 +15,7 @@ import ptumall.service.impl.OssFileServiceImpl;
 @Configuration
 public class FileStorageConfig {
 
+    //从配置文件中读取存储类型配置
     @Value("${file.storage-type}")
     private String storageType;
     
