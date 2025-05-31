@@ -158,4 +158,11 @@ public interface OrderDao {
      * @return 销售总额
      */
     BigDecimal sumTotalAmount();
+    
+    /**
+     * 更新订单
+     * @param order 订单信息
+     * @return 影响行数
+     */
+    int updateById(Orders order);
 }

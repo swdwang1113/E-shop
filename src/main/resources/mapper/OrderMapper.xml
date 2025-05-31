@@ -171,4 +171,30 @@
     <select id="sumTotalAmount" resultType="java.math.BigDecimal">
         SELECT IFNULL(SUM(total_amount), 0) FROM orders WHERE status > 0
     </select>
+
+    <update id="updateById" parameterType="ptumall.model.Orders">
+        UPDATE orders
+        <set>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="paymentType != null">
+                payment_type = #{paymentType},
+            </if>
+            <if test="paymentTime != null">
+                payment_time = #{paymentTime},
+            </if>
+            <if test="shippingTime != null">
+                shipping_time = #{shippingTime},
+            </if>
+            <if test="completionTime != null">
+                completion_time = #{completionTime},
+            </if>
+            <if test="addressId != null">
+                address_id = #{addressId},
+            </if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
 </mapper> 

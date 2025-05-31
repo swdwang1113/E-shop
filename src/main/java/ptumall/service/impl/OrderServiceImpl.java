@@ -638,19 +638,29 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public boolean shipOrder(Integer orderId) {
-        // 获取并验证订单
+        // 验证订单
         Orders order = orderDao.selectById(orderId);
         if (order == null) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "订单不存在");
         }
         
-        // 验证订单状态
+        // 验证订单状态，只有已付款的订单可以发货
         if (order.getStatus() != 1) {
-            throw new BusinessException(ResultCode.PARAM_ERROR, "当前订单状态不可发货");
+            throw new BusinessException(ResultCode.PARAM_ERROR, "订单状态不正确，无法发货");
         }
         
-        // 更新订单状态为已发货(2)
-        return orderDao.updateStatus(orderId, (byte) 2) > 0;
+        // 更新订单状态为已发货
+        int rows = orderDao.updateStatus(orderId, (byte) 2);
+        
+        // 设置发货时间
+        if (rows > 0) {
+            Orders updateOrder = new Orders();
+            updateOrder.setId(orderId);
+            updateOrder.setShippingTime(new Date());
+            orderDao.updateById(updateOrder);
+        }
+        
+        return rows > 0;
     }
     
     /**

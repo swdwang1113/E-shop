@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ptumall.dao.ShippingInfoDao">
+    <resultMap id="BaseResultMap" type="ptumall.model.ShippingInfo">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="order_id" property="orderId" jdbcType="INTEGER"/>
+        <result column="shipping_company" property="shippingCompany" jdbcType="VARCHAR"/>
+        <result column="tracking_number" property="trackingNumber" jdbcType="VARCHAR"/>
+        <result column="sender_address" property="senderAddress" jdbcType="VARCHAR"/>
+        <result column="sender_longitude" property="senderLongitude" jdbcType="DECIMAL"/>
+        <result column="sender_latitude" property="senderLatitude" jdbcType="DECIMAL"/>
+        <result column="receiver_address" property="receiverAddress" jdbcType="VARCHAR"/>
+        <result column="receiver_longitude" property="receiverLongitude" jdbcType="DECIMAL"/>
+        <result column="receiver_latitude" property="receiverLatitude" jdbcType="DECIMAL"/>
+        <result column="estimated_time" property="estimatedTime" jdbcType="TIMESTAMP"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, order_id, shipping_company, tracking_number, sender_address, sender_longitude, sender_latitude,
+        receiver_address, receiver_longitude, receiver_latitude, estimated_time, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="ptumall.model.ShippingInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO shipping_info (
+            order_id, shipping_company, tracking_number, sender_address, sender_longitude, sender_latitude,
+            receiver_address, receiver_longitude, receiver_latitude, estimated_time, create_time, update_time
+        ) VALUES (
+            #{orderId}, #{shippingCompany}, #{trackingNumber}, #{senderAddress}, #{senderLongitude}, #{senderLatitude},
+            #{receiverAddress}, #{receiverLongitude}, #{receiverLatitude}, #{estimatedTime}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <select id="selectByOrderId" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM shipping_info
+        WHERE order_id = #{orderId}
+    </select>
+
+    <update id="update" parameterType="ptumall.model.ShippingInfo">
+        UPDATE shipping_info
+        <set>
+            <if test="shippingCompany != null">
+                shipping_company = #{shippingCompany},
+            </if>
+            <if test="trackingNumber != null">
+                tracking_number = #{trackingNumber},
+            </if>
+            <if test="senderAddress != null">
+                sender_address = #{senderAddress},
+            </if>
+            <if test="senderLongitude != null">
+                sender_longitude = #{senderLongitude},
+            </if>
+            <if test="senderLatitude != null">
+                sender_latitude = #{senderLatitude},
+            </if>
+            <if test="receiverAddress != null">
+                receiver_address = #{receiverAddress},
+            </if>
+            <if test="receiverLongitude != null">
+                receiver_longitude = #{receiverLongitude},
+            </if>
+            <if test="receiverLatitude != null">
+                receiver_latitude = #{receiverLatitude},
+            </if>
+            <if test="estimatedTime != null">
+                estimated_time = #{estimatedTime},
+            </if>
+            update_time = now()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Integer">
+        DELETE FROM shipping_info
+        WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByOrderId" parameterType="java.lang.Integer">
+        DELETE FROM shipping_info
+        WHERE order_id = #{orderId}
+    </delete>
+</mapper> 
