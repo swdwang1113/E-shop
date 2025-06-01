@@ -5,8 +5,8 @@ spring:
     name: ptumall
   datasource:
     url: jdbc:mysql://localhost:3306/eshop?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf-8
-    username: yourUsername
-    password: yourPassword
+    username: root
+    password: 1113
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
@@ -18,7 +18,7 @@ mybatis:
   mapper-locations: classpath:/mapper/*
 
 jwt:
-  SING: "yourJwtSecret" #密钥
+  SING: "ptu202212900429" #密钥
   expireTime: 1440 #token有效时间 (分钟)
 pagehelper:
   helper-dialect: mysql
@@ -30,7 +30,7 @@ pagehelper:
 file:
   # 存储类型：local(本地存储), oss(阿里云OSS)
   storage-type: oss
-  save-path: "/path/to/your/images/"
+  save-path: "D:/code/SHOP/shop-server/servershop/src/main/resources/static/img/"
   
 # 图片URL前缀配置  
 image:
@@ -39,11 +39,33 @@ image:
 # 阿里云OSS配置
 aliyun:
   oss:
-    endpoint: your-endpoint.aliyuncs.com
-    accessKeyId: yourAccessKeyId
-    accessKeySecret: yourAccessKeySecret
-    bucketName: yourBucketName
-    urlPrefix: https://your-bucket.oss-region.aliyuncs.com
+    endpoint:  # 请替换为你的实际endpoint
+    accessKeyId:  # 请替换为你的accessKeyId
+    accessKeySecret:  # 请替换为你的accessKeySecret
+    bucketName:  # 请替换为你的bucketName
+    urlPrefix:  # 请替换为你的OSS访问域名
+
+# 高德地图API配置
+gaode:
+  map:
+    key: 
+    web-js-key: 
 
 swagger:
-  enabled: true 
+  enabled: true
+
+# 支付宝沙箱支付配置
+alipay:
+  # 应用ID
+  app-id: 
+  # 商户私钥
+  merchant-private-key:
+  # 支付宝公钥
+  alipay-public-key: 
+  gateway-url: https://openapi.alipaydev.com/gateway.do
+  # 支付成功后的回调地址
+  notify-url: http://localhost:8080/api/alipay/notify
+  # 支付成功后的前端跳转地址
+  return-url: http://localhost:8080/api/alipay/return
+
+
