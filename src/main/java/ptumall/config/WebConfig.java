@@ -30,7 +30,9 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/goods/list","/goods/*","/goods/recommend")  // 商品相关查询接口不需要验证
                 .excludePathPatterns("/category/list","/category/*")  // 商品分类查询接口不需要验证
                 .excludePathPatterns("/img/**")  // 图片资源不需要验证
-                .excludePathPatterns("/swagger-resources/**","/swagger-ui/**", "/v3/**", "/error");  // Swagger相关接口不需要验证
+                .excludePathPatterns("/swagger-resources/**","/swagger-ui/**", "/v3/**", "/error") // Swagger相关接口不需要验证
+                .excludePathPatterns("/api/alipay/**")  // 支付宝相关接口不需要验证
+                .excludePathPatterns("/api/email/code/send", "/api/email/login");  // 邮箱验证码登录相关接口不需要验证
     }
     
     /**

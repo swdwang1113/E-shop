@@ -8,12 +8,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ptumall.config.JWTInterceptors;
 import ptumall.model.Orders;
+import ptumall.service.AlipayService;
 import ptumall.service.OrderService;
 import ptumall.vo.CreateOrderParam;
 import ptumall.vo.PageResult;
 import ptumall.vo.Result;
+import ptumall.vo.ResultCode;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * 订单控制器
@@ -31,6 +36,13 @@ public class OrderController {
      */
     @Autowired
     private OrderService orderService;
+
+    /**
+     * 支付宝服务接口
+     * 用于处理支付宝支付相关的业务逻辑
+     */
+    @Autowired
+    private AlipayService alipayService;
 
     /**
      * 创建新订单
@@ -89,7 +101,14 @@ public class OrderController {
         if (userId == null) {
             return Result.unauthorized();
         }
-        Orders order = orderService.getOrderByOrderNo(userId, orderNo);
+        
+        // 处理可能包含用户ID的订单号
+        String originalOrderNo = orderNo;
+        if (orderNo.contains("_")) {
+            originalOrderNo = orderNo.split("_")[0];
+        }
+        
+        Orders order = orderService.getOrderByOrderNo(userId, originalOrderNo);
         return Result.success(order);
     }
 
@@ -158,6 +177,7 @@ public class OrderController {
      * 处理订单支付操作
      * 
      * @param request HTTP请求对象
+     * @param response HTTP响应对象
      * @param id 订单ID
      * @param paymentType 支付方式
      * @return 支付操作是否成功
@@ -165,20 +185,48 @@ public class OrderController {
     @ApiOperation("支付订单")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "id", value = "订单ID", required = true, paramType = "path"),
-        @ApiImplicitParam(name = "paymentType", value = "支付方式", required = true, paramType = "query", example = "1")
+        @ApiImplicitParam(name = "paymentType", value = "支付方式(1支付宝，2微信，3银行卡)", required = true, paramType = "query", example = "1")
     })
     @PostMapping("/{id}/pay")
-    public Result<Boolean> payOrder(
+    public Result<Object> payOrder(
         HttpServletRequest request,
+        HttpServletResponse response,
         @PathVariable("id") Integer id,
         @RequestParam("paymentType") Byte paymentType
-    ) {
+    ) throws IOException {
         Integer userId = (Integer) request.getAttribute(JWTInterceptors.USER_ID_KEY);
         if (userId == null) {
             return Result.unauthorized();
         }
-        boolean success = orderService.payOrder(userId, id, paymentType);
-        return Result.success(success);
+        
+        // 如果是支付宝支付
+        if (paymentType == 1) {
+            // 获取订单信息
+            Orders order = orderService.getOrderDetail(userId, id);
+            if (order == null) {
+                return Result.failure(ResultCode.NOT_FOUND, "订单不存在");
+            }
+            
+            // 创建支付宝支付表单
+            String orderNo = order.getOrderNo() + "_" + userId; // 添加用户ID到订单号中，方便回调时识别
+            String payForm = alipayService.createPayForm(id.longValue(), orderNo, order.getTotalAmount().doubleValue(), "订单支付");
+            
+            if (payForm != null) {
+                // 直接输出HTML表单
+                response.setContentType("text/html;charset=UTF-8");
+                PrintWriter out = response.getWriter();
+                out.write(payForm);
+                out.flush();
+                out.close();
+                return null;
+            } else {
+                return Result.failure(ResultCode.FAILED, "生成支付表单失败");
+            }
+        } else {
+            // 其他支付方式走原有流程
+            boolean success = orderService.payOrder(userId, id, paymentType);
+            return Result.success(success);
+        }
     }
 
     /**

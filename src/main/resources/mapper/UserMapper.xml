@@ -78,4 +78,9 @@
     <select id="count" resultType="java.lang.Integer">
         SELECT COUNT(*) FROM user
     </select>
+    
+    <!-- 根据邮箱查询用户 -->
+    <select id="findByEmail" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT * FROM user WHERE email = #{email}
+    </select>
 </mapper>

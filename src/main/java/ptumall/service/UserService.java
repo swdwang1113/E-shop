@@ -3,6 +3,8 @@ package ptumall.service;
 import ptumall.model.User;
 import ptumall.vo.PageResult;
 
+import java.util.Map;
+
 public interface UserService {
     /**
      * 用户注册
@@ -78,4 +80,19 @@ public interface UserService {
      * @return 用户总数
      */
     int getUserCount();
+    
+    /**
+     * 发送邮箱验证码
+     * @param email 邮箱
+     * @return 是否发送成功
+     */
+    boolean sendEmailCode(String email);
+    
+    /**
+     * 通过邮箱验证码登录
+     * @param email 邮箱
+     * @param code 验证码
+     * @return 登录结果，包含用户ID、用户名和token
+     */
+    Map<String, Object> loginByEmailCode(String email, String code);
 }

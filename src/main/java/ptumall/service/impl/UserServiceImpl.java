@@ -2,24 +2,40 @@ package ptumall.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ptumall.utils.JWTUtils;
 import ptumall.dao.UserDao;
 import ptumall.exception.BusinessException;
 import ptumall.model.User;
+import ptumall.service.EmailService;
 import ptumall.service.UserService;
+import ptumall.service.VerificationCodeService;
 import ptumall.vo.PageResult;
 import ptumall.vo.ResultCode;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserDao userDao;
+    
+    @Autowired
+    private EmailService emailService;
+    
+    @Autowired
+    private VerificationCodeService verificationCodeService;
+    
+    @Autowired
+    private JWTUtils jwtUtils;
     
     @Override
     @Transactional
@@ -173,5 +189,49 @@ public class UserServiceImpl implements UserService {
     @Override
     public int getUserCount() {
         return userDao.count();
+    }
+    
+    @Override
+    public boolean sendEmailCode(String email) {
+        // 检查邮箱是否已注册
+        User user = userDao.findByEmail(email);
+        if (user == null) {
+            log.warn("邮箱未注册：{}", email);
+            return false;
+        }
+        
+        // 生成验证码
+        String code = verificationCodeService.generateEmailCode(email);
+        
+        // 发送验证码邮件
+        return emailService.sendVerificationCode(email, code);
+    }
+    
+    @Override
+    public Map<String, Object> loginByEmailCode(String email, String code) {
+        // 验证验证码
+        if (!verificationCodeService.verifyEmailCode(email, code)) {
+            log.warn("验证码验证失败：{}", email);
+            return null;
+        }
+        
+        // 查询用户
+        User user = userDao.findByEmail(email);
+        if (user == null) {
+            log.warn("邮箱未注册：{}", email);
+            return null;
+        }
+        
+        // 生成JWT令牌
+        String token = JWTUtils.getToken(user.getId(), user.getUsername());
+        
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("userId", user.getId());
+        result.put("username", user.getUsername());
+        result.put("token", token);
+        
+        log.info("用户邮箱验证码登录成功：{}", email);
+        return result;
     }
 }

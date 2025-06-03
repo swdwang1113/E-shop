@@ -75,4 +75,11 @@ public interface UserDao {
      * @return 用户数量
      */
     int count();
+    
+    /**
+     * 根据邮箱查询用户
+     * @param email 邮箱
+     * @return 用户对象，未找到则返回null
+     */
+    User findByEmail(String email);
 }
