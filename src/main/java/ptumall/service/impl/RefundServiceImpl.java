@@ -12,6 +12,7 @@ import ptumall.entity.Refund;
 import ptumall.model.Orders;
 import ptumall.model.OrderItems;
 import ptumall.service.RefundService;
+import ptumall.service.AlipayService;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -35,9 +36,12 @@ public class RefundServiceImpl implements RefundService {
     @Autowired
     private GoodsDao goodsDao;
     
+    @Autowired
+    private AlipayService alipayService;
+    
     @Override
-    public Refund applyRefund(Integer orderId, Integer userId, String reason, String description) {
-        logger.info("申请退款: orderId={}, userId={}, reason={}", orderId, userId, reason);
+    public Refund applyRefund(Integer orderId, Integer userId, String reason, String description, String images) {
+        logger.info("申请退款(带图片): orderId={}, userId={}, reason={}, images={}", orderId, userId, reason, images);
         
         // 1. 获取订单信息
         Orders order = orderDao.selectById(orderId);
@@ -76,6 +80,7 @@ public class RefundServiceImpl implements RefundService {
         refund.setRefundAmount(order.getTotalAmount()); // 退款金额为支付金额
         refund.setReason(reason);
         refund.setDescription(description);
+        refund.setImages(images); // 设置退款凭证图片
         refund.setStatus(0); // 0-处理中
         
         Date now = new Date();
@@ -87,6 +92,12 @@ public class RefundServiceImpl implements RefundService {
         logger.info("退款申请已创建: refundId={}", refund.getId());
         
         return refund;
+    }
+    
+    @Override
+    public Refund applyRefund(Integer orderId, Integer userId, String reason, String description) {
+        // 调用带图片的方法，图片参数传null
+        return applyRefund(orderId, userId, reason, description, null);
     }
     
     @Override
@@ -165,6 +176,22 @@ public class RefundServiceImpl implements RefundService {
             if (order == null) {
                 logger.error("订单不存在: orderId={}", refund.getOrderId());
                 throw new RuntimeException("订单不存在");
+            }
+            
+            // 判断支付方式，如果是支付宝支付(paymentType=1)，则调用支付宝退款接口
+            if (order.getPaymentType() != null && order.getPaymentType() == 1) {
+                // 构建支付宝退款的订单号（原始订单号_用户ID）
+                String alipayOrderNo = order.getOrderNo() + "_" + order.getUserId();
+                Double refundAmount = refund.getRefundAmount().doubleValue();
+                String refundReason = refund.getReason();
+                
+                // 调用支付宝退款
+                boolean refundResult = alipayService.refund(alipayOrderNo, refundAmount, refundReason);
+                if (!refundResult) {
+                    logger.error("支付宝退款失败: orderId={}, orderNo={}", order.getId(), order.getOrderNo());
+                    throw new RuntimeException("支付宝退款失败");
+                }
+                logger.info("支付宝退款成功: orderId={}, orderNo={}", order.getId(), order.getOrderNo());
             }
             
             // 4.1 更新订单状态为"已退款"

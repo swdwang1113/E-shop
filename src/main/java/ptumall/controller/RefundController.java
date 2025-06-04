@@ -1,8 +1,13 @@
 package ptumall.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import ptumall.entity.Refund;
+import ptumall.service.FileService;
 import ptumall.service.RefundService;
 import ptumall.vo.Result;
 import ptumall.vo.ResultCode;
@@ -13,10 +18,12 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 退款控制器
@@ -26,39 +33,16 @@ import java.util.Map;
 @Api(tags = "用户退款接口")
 public class RefundController {
     
+    private static final Logger logger = LoggerFactory.getLogger(RefundController.class);
+    
     @Autowired
     private RefundService refundService;
     
-    /**
-     * 申请退款
-     */
-    @PostMapping("/orders/{id}/refund")
-    @ApiOperation(value = "申请退款", notes = "用户申请订单退款，需要提供退款原因")
-    public Result applyRefund(
-            @ApiParam(value = "订单ID", required = true) 
-            @PathVariable("id") Integer orderId, 
-            @ApiParam(value = "退款参数", required = true, example = "{\"reason\":\"商品质量问题\", \"description\":\"商品收到后发现有破损\"}") 
-            @RequestBody Map<String, String> params,
-            HttpServletRequest request) {
-        Integer userId = (Integer) request.getAttribute(JWTInterceptors.USER_ID_KEY);
-        if (userId == null) {
-            return Result.failed(ResultCode.UNAUTHORIZED, "请先登录");
-        }
-        
-        String reason = params.get("reason");
-        String description = params.get("description");
-        
-        if (reason == null || reason.trim().isEmpty()) {
-            return Result.failed(ResultCode.PARAM_ERROR, "退款原因不能为空");
-        }
-        
-        try {
-            Refund refund = refundService.applyRefund(orderId, userId, reason, description);
-            return Result.success("退款申请已提交", refund);
-        } catch (Exception e) {
-            return Result.failed(ResultCode.FAILED, e.getMessage());
-        }
-    }
+    @Autowired
+    private FileService fileService;
+    
+    @Value("${image.prefix-url}")
+    private String imageUrlPrefix;
     
     /**
      * 获取退款详情
@@ -124,5 +108,78 @@ public class RefundController {
         resultMap.put("list", pagedRefunds);
         
         return Result.success(resultMap);
+    }
+    
+    /**
+     * 上传退款凭证图片
+     */
+    @PostMapping("/refunds/upload/image")
+    @ApiOperation(value = "上传退款凭证图片", notes = "上传退款凭证图片，返回图片URL")
+    public Result uploadRefundImage(
+            @ApiParam(value = "图片文件", required = true) 
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest request) {
+        Integer userId = (Integer) request.getAttribute(JWTInterceptors.USER_ID_KEY);
+        if (userId == null) {
+            return Result.failed(ResultCode.UNAUTHORIZED, "请先登录");
+        }
+        
+        if (file.isEmpty()) {
+            return Result.failed(ResultCode.PARAM_ERROR, "上传文件不能为空");
+        }
+        
+        try {
+            // 检查文件类型
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || !(originalFilename.endsWith(".jpg") || 
+                    originalFilename.endsWith(".jpeg") || originalFilename.endsWith(".png"))) {
+                return Result.failed(ResultCode.PARAM_ERROR, "只支持jpg、jpeg、png格式的图片");
+            }
+            
+            // 使用FileService上传图片到OSS
+            String imageUrl = fileService.uploadImage(file, "refund");
+            if (imageUrl == null) {
+                return Result.failed(ResultCode.FAILED, "图片上传失败");
+            }
+            
+            logger.info("用户{}上传退款凭证图片成功: {}", userId, imageUrl);
+            
+            return Result.success(imageUrl);
+        } catch (Exception e) {
+            logger.error("上传退款凭证图片失败: ", e);
+            return Result.failed(ResultCode.FAILED, "上传图片失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 申请退款
+     */
+    @PostMapping("/orders/{id}/refund")
+    @ApiOperation(value = "申请退款", notes = "用户申请订单退款，需要提供退款原因和凭证图片")
+    public Result applyRefund(
+            @ApiParam(value = "订单ID", required = true) 
+            @PathVariable("id") Integer orderId, 
+            @ApiParam(value = "退款参数", required = true, example = "{\"reason\":\"商品质量问题\", \"description\":\"商品收到后发现有破损\", \"images\":\"http://example.com/img1.jpg,http://example.com/img2.jpg\"}") 
+            @RequestBody Map<String, String> params,
+            HttpServletRequest request) {
+        Integer userId = (Integer) request.getAttribute(JWTInterceptors.USER_ID_KEY);
+        if (userId == null) {
+            return Result.failed(ResultCode.UNAUTHORIZED, "请先登录");
+        }
+        
+        String reason = params.get("reason");
+        String description = params.get("description");
+        String images = params.get("images"); // 图片URL，多个用逗号分隔
+        
+        if (reason == null || reason.trim().isEmpty()) {
+            return Result.failed(ResultCode.PARAM_ERROR, "退款原因不能为空");
+        }
+        
+        try {
+            Refund refund = refundService.applyRefund(orderId, userId, reason, description, images);
+            return Result.success("退款申请已提交", refund);
+        } catch (Exception e) {
+            return Result.failed(ResultCode.FAILED, e.getMessage());
+        }
     }
 } 

@@ -31,4 +31,14 @@ public interface AlipayService {
      * @return 是否支付成功
      */
     boolean queryPayStatus(String orderNo);
+    
+    /**
+     * 支付宝退款
+     * 
+     * @param orderNo 订单编号
+     * @param refundAmount 退款金额
+     * @param refundReason 退款原因
+     * @return 退款是否成功
+     */
+    boolean refund(String orderNo, Double refundAmount, String refundReason);
 } 

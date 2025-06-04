@@ -5,7 +5,9 @@ import com.alipay.api.AlipayClient;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.request.AlipayTradeQueryRequest;
+import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.response.AlipayTradeQueryResponse;
+import com.alipay.api.response.AlipayTradeRefundResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -162,5 +164,75 @@ public class AlipayServiceImpl implements AlipayService {
             log.error("查询支付宝订单状态异常", e);
             return false;
         }
+    }
+
+    @Override
+    public boolean refund(String orderNo, Double refundAmount, String refundReason) {
+        log.info("申请支付宝退款：订单号={}, 退款金额={}, 退款原因={}", orderNo, refundAmount, refundReason);
+        
+        // 最大重试次数
+        int maxRetries = 3;
+        // 重试间隔（毫秒）
+        long retryInterval = 2000;
+        
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                AlipayTradeRefundRequest request = new AlipayTradeRefundRequest();
+                
+                // 设置业务参数
+                String bizContent = "{" +
+                        "\"out_trade_no\":\"" + orderNo + "\"," +
+                        "\"refund_amount\":" + refundAmount + "," +
+                        "\"refund_reason\":\"" + refundReason + "\"" +
+                        "}";
+                request.setBizContent(bizContent);
+                
+                // 执行退款
+                AlipayTradeRefundResponse response = alipayClient.execute(request);
+                
+                if (response.isSuccess()) {
+                    log.info("支付宝退款成功：订单号={}, 退款金额={}", orderNo, refundAmount);
+                    return true;
+                } else {
+                    log.error("支付宝退款失败：订单号={}, 错误码={}, 错误信息={}, 子错误码={}, 子错误信息={}", 
+                            orderNo, response.getCode(), response.getMsg(), 
+                            response.getSubCode(), response.getSubMsg());
+                    
+                    // 如果是最后一次尝试，则返回失败
+                    if (attempt == maxRetries) {
+                        log.error("支付宝退款重试{}次后仍然失败，放弃重试：订单号={}", maxRetries, orderNo);
+                        return false;
+                    }
+                    
+                    // 等待一段时间后重试
+                    log.info("支付宝退款失败，准备第{}次重试：订单号={}", attempt + 1, orderNo);
+                    try {
+                        Thread.sleep(retryInterval);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        log.error("重试等待被中断", e);
+                    }
+                }
+            } catch (AlipayApiException e) {
+                log.error("支付宝退款异常：订单号=" + orderNo, e);
+                
+                // 如果是最后一次尝试，则返回失败
+                if (attempt == maxRetries) {
+                    log.error("支付宝退款重试{}次后仍然发生异常，放弃重试：订单号={}", maxRetries, orderNo);
+                    return false;
+                }
+                
+                // 等待一段时间后重试
+                log.info("支付宝退款异常，准备第{}次重试：订单号={}", attempt + 1, orderNo);
+                try {
+                    Thread.sleep(retryInterval);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    log.error("重试等待被中断", ie);
+                }
+            }
+        }
+        
+        return false;
     }
 } 

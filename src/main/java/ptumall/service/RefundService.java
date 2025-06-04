@@ -19,6 +19,17 @@ public interface RefundService {
     Refund applyRefund(Integer orderId, Integer userId, String reason, String description);
     
     /**
+     * 申请退款（带图片）
+     * @param orderId 订单ID
+     * @param userId 用户ID
+     * @param reason 退款原因
+     * @param description 详细描述
+     * @param images 退款凭证图片，多张图片用逗号分隔
+     * @return 退款记录
+     */
+    Refund applyRefund(Integer orderId, Integer userId, String reason, String description, String images);
+    
+    /**
      * 获取退款详情
      * @param id 退款ID
      * @param userId 用户ID (用于权限验证)

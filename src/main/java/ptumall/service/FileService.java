@@ -21,4 +21,23 @@ public interface FileService {
      * @return 删除是否成功
      */
     boolean deleteImage(String imageUrl);
+    
+    /**
+     * 上传文件（兼容原FileUploadUtil.uploadFile方法）
+     * @param file 上传的文件
+     * @param relativePath 相对路径，如"/img/refund/xxx.jpg"
+     * @return 返回可访问的文件URL
+     */
+    default String uploadFile(MultipartFile file, String relativePath) {
+        // 从relativePath中提取目录和文件名
+        // 例如：从"/img/refund/xxx.jpg"提取"refund"作为目录
+        String directory = "";
+        if (relativePath.startsWith("/img/")) {
+            int secondSlash = relativePath.indexOf("/", 5);
+            if (secondSlash > 0) {
+                directory = relativePath.substring(5, secondSlash);
+            }
+        }
+        return uploadImage(file, directory);
+    }
 } 

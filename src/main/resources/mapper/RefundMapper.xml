@@ -9,6 +9,7 @@
         <result column="refund_amount" property="refundAmount" jdbcType="DECIMAL"/>
         <result column="reason" property="reason" jdbcType="VARCHAR"/>
         <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="images" property="images" jdbcType="VARCHAR"/>
         <result column="status" property="status" jdbcType="INTEGER"/>
         <result column="admin_remark" property="adminRemark" jdbcType="VARCHAR"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
@@ -16,15 +17,15 @@
     </resultMap>
     
     <sql id="Base_Column_List">
-        id, order_id, user_id, refund_amount, reason, description, status, admin_remark, create_time, update_time
+        id, order_id, user_id, refund_amount, reason, description, images, status, admin_remark, create_time, update_time
     </sql>
     
     <insert id="insert" parameterType="ptumall.entity.Refund" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO refund (
-            order_id, user_id, refund_amount, reason, description, 
+            order_id, user_id, refund_amount, reason, description, images,
             status, admin_remark, create_time, update_time
         ) VALUES (
-            #{orderId}, #{userId}, #{refundAmount}, #{reason}, #{description},
+            #{orderId}, #{userId}, #{refundAmount}, #{reason}, #{description}, #{images},
             #{status}, #{adminRemark}, #{createTime}, #{updateTime}
         )
     </insert>
