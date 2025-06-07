@@ -25,14 +25,16 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new JWTInterceptors())
                 .addPathPatterns("/**")  // 拦截所有请求
-                .excludePathPatterns("/user/login","/user/register","/user/check-username")  // 登录、注册、检查用户名接口不需要验证
-                .excludePathPatterns("/captcha/get")  // 验证码接口不需要验证
-                .excludePathPatterns("/goods/list","/goods/*","/goods/recommend")  // 商品相关查询接口不需要验证
-                .excludePathPatterns("/category/list","/category/*")  // 商品分类查询接口不需要验证
-                .excludePathPatterns("/img/**")  // 图片资源不需要验证
-                .excludePathPatterns("/swagger-resources/**","/swagger-ui/**", "/v3/**", "/error") // Swagger相关接口不需要验证
-                .excludePathPatterns("/api/alipay/**")  // 支付宝相关接口不需要验证
-                .excludePathPatterns("/api/email/code/send", "/api/email/login");  // 邮箱验证码登录相关接口不需要验证
+                .excludePathPatterns(
+                    "/user/login", "/user/register", "/user/check-username",  // 登录、注册、检查用户名接口不需要验证
+                    "/captcha/get",  // 验证码接口不需要验证
+                    "/goods/list", "/goods/*", "/goods/recommend",  // 商品相关查询接口不需要验证
+                    "/category/list", "/category/*",  // 商品分类查询接口不需要验证
+                    "/img/**",  // 图片资源不需要验证
+                    "/swagger-resources/**", "/swagger-ui/**", "/v3/**", "/error", // Swagger相关接口不需要验证
+                    "/api/alipay/**",  // 支付宝相关接口不需要验证
+                    "/api/email/code/send", "/api/email/login"  // 邮箱验证码登录相关接口不需要验证
+                );
     }
     
     /**
