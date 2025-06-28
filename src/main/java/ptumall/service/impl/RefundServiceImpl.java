@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ptumall.dao.OrderDao;
 import ptumall.dao.RefundDao;
 import ptumall.dao.GoodsDao;
-import ptumall.entity.Refund;
+import ptumall.model.Refund;
 import ptumall.model.Orders;
 import ptumall.model.OrderItems;
 import ptumall.service.RefundService;

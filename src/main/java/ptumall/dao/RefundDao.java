@@ -2,7 +2,7 @@ package ptumall.dao;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import ptumall.entity.Refund;
+import ptumall.model.Refund;
 import java.util.List;
 
 /**

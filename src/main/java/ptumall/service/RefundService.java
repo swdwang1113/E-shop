@@ -1,6 +1,6 @@
 package ptumall.service;
 
-import ptumall.entity.Refund;
+import ptumall.model.Refund;
 import java.util.List;
 
 /**

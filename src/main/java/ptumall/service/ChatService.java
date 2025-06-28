@@ -1,7 +1,7 @@
 package ptumall.service;
 
-import ptumall.entity.ChatMessage;
-import ptumall.entity.ChatSession;
+import ptumall.model.ChatMessage;
+import ptumall.model.ChatSession;
 import ptumall.model.ChatMessageDTO;
 
 import java.util.List;

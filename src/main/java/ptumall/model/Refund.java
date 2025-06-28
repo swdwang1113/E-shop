@@ -1,4 +1,4 @@
-package ptumall.entity;
+package ptumall.model;
 
 import lombok.Data;
 import java.io.Serializable;

@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import org.apache.ibatis.annotations.Delete;
-import ptumall.entity.ChatSession;
+import ptumall.model.ChatSession;
 
 import java.util.List;
 
